@@ -26,7 +26,7 @@ class HttpMockServer {
                     GPathResult request = new XmlSlurper().parse(ex.requestBody)
                     if(ex.requestMethod== 'POST' && request.name() == 'addMock'){
                         addMockAction(request, ex)
-                    }else if(ex.requestMethod == 'DELETE' && request.name() == 'removeMock'){
+                    }else if(ex.requestMethod == 'POST' && request.name() == 'removeMock'){
                         removeMockAction(request, ex)
                     }
                     //TODO add list mock
@@ -67,6 +67,7 @@ class HttpMockServer {
             MockAction action = e.actions.find {it.name == name}
             if(action){
                 e.actions.remove(action)
+                actionsNames.remove(name)
             }
         }}
         ex.responseBody << '<mockRemoved/>'
