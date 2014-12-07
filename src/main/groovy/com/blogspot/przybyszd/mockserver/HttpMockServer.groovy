@@ -25,6 +25,7 @@ class HttpMockServer {
                     }else if(ex.requestMethod == 'POST' && request.name() == 'removeMock'){
                         removeMock(request, ex)
                     }
+                    //TODO add get mock report
                     //TODO add list mock
                 }catch(Exception e){
                     createErrorResponse(ex, e)
