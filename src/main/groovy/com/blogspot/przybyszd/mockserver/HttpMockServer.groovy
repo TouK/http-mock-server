@@ -3,6 +3,7 @@ package com.blogspot.przybyszd.mockserver
 import com.sun.net.httpserver.HttpExchange
 import com.sun.net.httpserver.HttpHandler
 import com.sun.net.httpserver.HttpServer
+import groovy.transform.EqualsAndHashCode
 import groovy.util.slurpersupport.GPathResult
 
 import java.util.concurrent.CopyOnWriteArrayList
@@ -22,35 +23,59 @@ class HttpMockServer {
             HttpExchange ex ->
                 ex.sendResponseHeaders(200, 0)
                 try{
-                GPathResult request = new XmlSlurper().parse(ex.requestBody)
-                if(ex.requestMethod== 'POST' && request.name() == 'addMock'){
-                    String name = request.name
-                    if(name in actionsNames){
-                        throw new RuntimeException('action already registered')
+                    GPathResult request = new XmlSlurper().parse(ex.requestBody)
+                    if(ex.requestMethod== 'POST' && request.name() == 'addMock'){
+                        addMockAction(request, ex)
+                    }else if(ex.requestMethod == 'DELETE' && request.name() == 'removeMock'){
+                        removeMockAction(request, ex)
                     }
-                    println "Adding $name"
-                    String mockPath = request.path
-                    int mockPort = Integer.valueOf(request.port as String)
-                    Closure predicate = Eval.me(request.predicate as String) as Closure
-                    Closure okResponse = Eval.me(request.response as String) as Closure
-                    Action action = new Action(name, predicate, okResponse)
-                    HttpServerWraper child = childServers.find {it.port == mockPort}
-                    if(!child){
-                        child = new HttpServerWraper(mockPort)
-                        childServers << child
-                    }
-                    child.addAction(mockPath, action)
-                    actionsNames << name
-                    ex.responseBody << '<addedAction/>'
-                    ex.responseBody.close()
-                }
+                    //TODO add list mock
                 }catch(Exception e){
-                    ex.responseBody << """<exceptionOccured>${e.message}</exceptionOccured>"""
-                    ex.responseBody.close()
+                    createErrorResponse(ex, e)
                 }
-                //TODO add delete mock
-                //TODO add list mock
         })
+    }
+
+    private void addMockAction(GPathResult request, HttpExchange ex) {
+        String name = request.name
+        if (name in actionsNames) {
+            throw new RuntimeException('mock already registered')
+        }
+        println "Adding $name"
+        String mockPath = request.path
+        int mockPort = Integer.valueOf(request.port as String)
+        Closure predicate = Eval.me(request.predicate as String) as Closure
+        Closure okResponse = Eval.me(request.response as String) as Closure
+        MockAction action = new MockAction(name, predicate, okResponse)
+        HttpServerWraper child = childServers.find { it.port == mockPort }
+        if (!child) {
+            child = new HttpServerWraper(mockPort)
+            childServers << child
+        }
+        child.addAction(mockPath, action)
+        actionsNames << name
+        ex.responseBody << '<mockAdded/>'
+        ex.responseBody.close()
+    }
+
+    private void removeMockAction(GPathResult request, HttpExchange ex) {
+        String name = request.name
+        if (! (name in actionsNames)) {
+            throw new RuntimeException('mock not registered')
+        }
+        childServers.each { for (ContextExecutor e : it.executors){
+            MockAction action = e.actions.find {it.name == name}
+            if(action){
+                e.actions.remove(action)
+            }
+        }}
+        ex.responseBody << '<mockRemoved/>'
+        ex.responseBody.close()
+    }
+
+    private static void createErrorResponse(HttpExchange ex, Exception e) {
+        ex.responseBody << """<exceptionOccured>${e.message}</exceptionOccured>"""
+        ex.responseBody.close()
     }
 
     void stop(){
@@ -78,7 +103,7 @@ class HttpMockServer {
             httpServer.createContext(context, handler)
         }
 
-        void addAction(String path, Action action){
+        void addAction(String path, MockAction action){
             ContextExecutor executor = executors.find {it.path == path}
             if(executor){
                 executor.actions << action
@@ -100,9 +125,9 @@ class HttpMockServer {
     private static final class ContextExecutor{
         final HttpServerWraper httpServerWraper
         final String path
-        List<Action> actions
+        List<MockAction> actions
 
-        ContextExecutor(HttpServerWraper httpServerWraper, String path, Action initialAction) {
+        ContextExecutor(HttpServerWraper httpServerWraper, String path, MockAction initialAction) {
             this.httpServerWraper = httpServerWraper
             this.path = path
             this.actions = new CopyOnWriteArrayList<>([initialAction])
@@ -112,7 +137,7 @@ class HttpMockServer {
                     String input = ex.requestBody.text
                     println "Mock received input"
                     GPathResult xml = new XmlSlurper().parseText(input)
-                    for (Action action : actions){
+                    for (MockAction action : actions){
                         if(action.predicate(xml)){
                             ex.responseBody << action.responseOk(xml)
                             ex.responseBody.close()
@@ -125,14 +150,15 @@ class HttpMockServer {
         }
     }
 
-    private static final class Action{
+    @EqualsAndHashCode
+    private static final class MockAction {
         final String name
         final Closure predicate
         final Closure responseOk
         //TODO add http method
         //TODO add is soap method
 
-        Action(String name, Closure predicate, Closure responseOk) {
+        MockAction(String name, Closure predicate, Closure responseOk) {
             this.name = name
             this.predicate = predicate
             this.responseOk = responseOk
