@@ -9,13 +9,13 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CopyOnWriteArraySet
 import java.util.concurrent.Executors
 
-class SoapMockServer {
+class HttpMockServer {
 
     HttpServerWraper httpServerWraper
     List<HttpServerWraper> childServers = new CopyOnWriteArrayList<>()
     Set<String> actionsNames = new CopyOnWriteArraySet<>()
 
-    SoapMockServer(int port = 9999){
+    HttpMockServer(int port = 9999){
         httpServerWraper= new HttpServerWraper(port)
 
         httpServerWraper.createContext('/serverControl', {
@@ -81,9 +81,9 @@ class SoapMockServer {
         void addAction(String path, Action action){
             ContextExecutor executor = executors.find {it.path == path}
             if(executor){
-                executor.actions.add(action)
+                executor.actions << action
             }else {
-                executors.add(new ContextExecutor(this, path, action))
+                executors << new ContextExecutor(this, path, action)
             }
         }
 
@@ -129,6 +129,8 @@ class SoapMockServer {
         final String name
         final Closure predicate
         final Closure responseOk
+        //TODO add http method
+        //TODO add is soap method
 
         Action(String name, Closure predicate, Closure responseOk) {
             this.name = name
@@ -138,11 +140,11 @@ class SoapMockServer {
     }
 
     static void main(String [] args) {
-        SoapMockServer soapMockServer = new SoapMockServer()
+        HttpMockServer httpMockServer = new HttpMockServer()
 
         Runtime.runtime.addShutdownHook(new Thread({
             println 'Http server is stopping...'
-            soapMockServer.stop()
+            httpMockServer.stop()
             println 'Http server is stopped'
         } as Runnable))
 
