@@ -14,7 +14,7 @@ class HttpMockServer {
 
     HttpServerWraper httpServerWraper
     List<HttpServerWraper> childServers = new CopyOnWriteArrayList<>()
-    Set<String> actionsNames = new CopyOnWriteArraySet<>()
+    Set<String> mockNames = new CopyOnWriteArraySet<>()
 
     HttpMockServer(int port = 9999){
         httpServerWraper= new HttpServerWraper(port)
@@ -25,9 +25,9 @@ class HttpMockServer {
                 try{
                     GPathResult request = new XmlSlurper().parse(ex.requestBody)
                     if(ex.requestMethod== 'POST' && request.name() == 'addMock'){
-                        addMockAction(request, ex)
+                        addMock(request, ex)
                     }else if(ex.requestMethod == 'POST' && request.name() == 'removeMock'){
-                        removeMockAction(request, ex)
+                        removeMock(request, ex)
                     }
                     //TODO add list mock
                 }catch(Exception e){
@@ -36,9 +36,9 @@ class HttpMockServer {
         })
     }
 
-    private void addMockAction(GPathResult request, HttpExchange ex) {
+    private void addMock(GPathResult request, HttpExchange ex) {
         String name = request.name
-        if (name in actionsNames) {
+        if (name in mockNames) {
             throw new RuntimeException('mock already registered')
         }
         println "Adding $name"
@@ -46,30 +46,25 @@ class HttpMockServer {
         int mockPort = Integer.valueOf(request.port as String)
         Closure predicate = Eval.me(request.predicate as String) as Closure
         Closure okResponse = Eval.me(request.response as String) as Closure
-        MockAction action = new MockAction(name, predicate, okResponse)
+        Mock mock = new Mock(name, predicate, okResponse)
         HttpServerWraper child = childServers.find { it.port == mockPort }
         if (!child) {
             child = new HttpServerWraper(mockPort)
             childServers << child
         }
-        child.addAction(mockPath, action)
-        actionsNames << name
+        child.addMock(mockPath, mock)
+        mockNames << name
         ex.responseBody << '<mockAdded/>'
         ex.responseBody.close()
     }
 
-    private void removeMockAction(GPathResult request, HttpExchange ex) {
+    private void removeMock(GPathResult request, HttpExchange ex) {
         String name = request.name
-        if (! (name in actionsNames)) {
+        if (! (name in mockNames)) {
             throw new RuntimeException('mock not registered')
         }
-        childServers.each { for (ContextExecutor e : it.executors){
-            MockAction action = e.actions.find {it.name == name}
-            if(action){
-                e.actions.remove(action)
-                actionsNames.remove(name)
-            }
-        }}
+        childServers.each {it.removeMock(name)}
+        mockNames.remove(name)
         ex.responseBody << '<mockRemoved/>'
         ex.responseBody.close()
     }
@@ -104,43 +99,43 @@ class HttpMockServer {
             httpServer.createContext(context, handler)
         }
 
-        void addAction(String path, MockAction action){
+        void addMock(String path, Mock mock){
             ContextExecutor executor = executors.find {it.path == path}
             if(executor){
-                executor.actions << action
+                executor.mocks << mock
             }else {
-                executors << new ContextExecutor(this, path, action)
+                executors << new ContextExecutor(this, path, mock)
             }
-        }
-
-        void removeAction(String name){
-            //TODO delete action by name
         }
 
         void stop(){
             executors.each {httpServer.removeContext(it.path)}
             httpServer.stop(0)
         }
+
+        void removeMock(String name) {
+            executors.each {it.removeMock(name)}
+        }
     }
 
     private static final class ContextExecutor{
         final HttpServerWraper httpServerWraper
         final String path
-        List<MockAction> actions
+        List<Mock> mocks
 
-        ContextExecutor(HttpServerWraper httpServerWraper, String path, MockAction initialAction) {
+        ContextExecutor(HttpServerWraper httpServerWraper, String path, Mock initialMock) {
             this.httpServerWraper = httpServerWraper
             this.path = path
-            this.actions = new CopyOnWriteArrayList<>([initialAction])
+            this.mocks = new CopyOnWriteArrayList<>([initialMock])
             httpServerWraper.createContext(path,{
                 HttpExchange ex ->
                     ex.sendResponseHeaders(200, 0)
                     String input = ex.requestBody.text
                     println "Mock received input"
                     GPathResult xml = new XmlSlurper().parseText(input)
-                    for (MockAction action : actions){
-                        if(action.predicate(xml)){
-                            ex.responseBody << action.responseOk(xml)
+                    for (Mock mock : mocks){
+                        if(mock.predicate(xml)){
+                            ex.responseBody << mock.responseOk(xml)
                             ex.responseBody.close()
                             return
                         }
@@ -149,17 +144,24 @@ class HttpMockServer {
                     ex.responseBody.close()
             })
         }
+
+        void removeMock(String name) {
+            Mock mock = mocks.find {it.name == name}
+            if(mock){
+                mocks.remove(mock)
+            }
+        }
     }
 
     @EqualsAndHashCode
-    private static final class MockAction {
+    private static final class Mock {
         final String name
         final Closure predicate
         final Closure responseOk
         //TODO add http method
         //TODO add is soap method
 
-        MockAction(String name, Closure predicate, Closure responseOk) {
+        Mock(String name, Closure predicate, Closure responseOk) {
             this.name = name
             this.predicate = predicate
             this.responseOk = responseOk
