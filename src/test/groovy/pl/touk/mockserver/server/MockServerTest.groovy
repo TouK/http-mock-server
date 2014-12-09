@@ -1,13 +1,13 @@
-import com.blogspot.przybyszd.mockserver.HttpMockServer
+package pl.touk.mockserver.server
+
+import pl.touk.mockserver.server.HttpMockServer
 import groovy.util.slurpersupport.GPathResult
-import org.apache.http.HttpEntity
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
-import org.apache.http.util.EntityUtils
 import pl.touk.mockserver.client.AddMockRequestData
 import pl.touk.mockserver.client.ControlServerClient
 import pl.touk.mockserver.client.Util
@@ -15,8 +15,6 @@ import spock.lang.Shared
 import spock.lang.Specification
 
 class MockServerTest extends Specification{
-
-    private static final String controlServerUrl = 'http://localhost:9000/serverControl'
 
     ControlServerClient controlServerClient
 

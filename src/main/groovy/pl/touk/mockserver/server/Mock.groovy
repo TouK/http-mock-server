@@ -1,4 +1,4 @@
-package com.blogspot.przybyszd.mockserver
+package pl.touk.mockserver.server
 
 import groovy.transform.EqualsAndHashCode
 

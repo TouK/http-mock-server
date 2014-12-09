@@ -1,4 +1,4 @@
-package com.blogspot.przybyszd.mockserver
+package pl.touk.mockserver.server
 
 class Main {
     static void main(String [] args) {
