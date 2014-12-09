@@ -16,6 +16,8 @@
         <groovy-eclipse-batch.version>2.1.8-01</groovy-eclipse-batch.version>
         <groovy.version>2.3.3</groovy.version>
         <httpclient.version>4.3.5</httpclient.version>
+        <spock-core.version>1.0-groovy-2.0-SNAPSHOT</spock-core.version>
+        <commons-lang3.version>3.3.2</commons-lang3.version>
     </properties>
 
     <dependencies>
@@ -28,6 +30,18 @@
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>${httpclient.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.spockframework</groupId>
+            <artifactId>spock-core</artifactId>
+            <version>${spock-core.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons-lang3.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

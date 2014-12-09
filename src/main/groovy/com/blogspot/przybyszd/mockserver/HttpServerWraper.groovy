@@ -28,7 +28,7 @@ class HttpServerWraper {
     void addMock(String path, Mock mock) {
         ContextExecutor executor = executors.find { it.path == path }
         if (executor) {
-            executor.mocks << mock
+            executor.addMock(mock)
         } else {
             executors << new ContextExecutor(this, path, mock)
         }

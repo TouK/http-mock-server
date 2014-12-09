@@ -1,0 +1,25 @@
+package pl.touk.mockserver.client
+
+import groovy.transform.PackageScope
+import groovy.util.slurpersupport.GPathResult
+import org.apache.http.HttpEntity
+import org.apache.http.client.methods.CloseableHttpResponse
+import org.apache.http.util.EntityUtils
+
+class Util {
+    @PackageScope
+    static GPathResult extractXmlResponse(CloseableHttpResponse response){
+        HttpEntity entity = response.entity
+        GPathResult xml = new XmlSlurper().parseText(EntityUtils.toString(entity))
+        EntityUtils.consumeQuietly(entity)
+        return xml
+    }
+
+    static String soap(String request) {
+        return """<?xml version='1.0' encoding='UTF-8'?>
+            <soap-env:Envelope xmlns:soap-env='http://schemas.xmlsoap.org/soap/envelope/' xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing">
+                <soap-env:Body>$request</soap-env:Body>
+            </soap-env:Envelope>"""
+    }
+
+}

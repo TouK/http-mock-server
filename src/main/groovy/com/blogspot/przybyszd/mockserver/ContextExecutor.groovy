@@ -7,7 +7,7 @@ import java.util.concurrent.CopyOnWriteArrayList
 
 class ContextExecutor {
     private final HttpServerWraper httpServerWraper
-    private final String path
+    final String path
     private final List<Mock> mocks
 
     ContextExecutor(HttpServerWraper httpServerWraper, String path, Mock initialMock) {
@@ -57,6 +57,10 @@ class ContextExecutor {
             mocks.remove(mock)
         }
         return mock.counter
+    }
+
+    void addMock(Mock mock){
+        mocks << mock
     }
 
     private static String wrapSoap(String request) {
