@@ -75,7 +75,7 @@ class MockServerTest extends Specification{
             controlServerClient.removeMock('testSoap') == 1
     }
 
-//TODO    def "should add simultanously working post and rest mocks with the same predicate and endpoint nad port"(){}"
+//TODO    def "should add simultaneously working post and rest mocks with the same predicate and endpoint nad port"(){}"
     //TODO    def "should add mock minimal(){}"
     //TODO    def "should dispatch mocks with the same predicates on another ports"
     //TODO    def "should not add mock with existing name"(){}
