@@ -7,21 +7,18 @@ class Mock {
     final String name
     final String path
     final int port
-    final Closure predicate
-    final Closure responseOk
-    final boolean soap
-    //TODO add http method
-    //TODO add http code
-    //TODO add request headers
-    //TODO add response headers
+    Closure predicate = { xml -> true }
+    Closure responseOk = { xml -> '' }
+    boolean soap = false
+    int statusCode = 200
+    //TODO add http method - default POST
+    //TODO add request headers - default [:]
+    //TODO add response headers - default [:]
     int counter = 0
     //TODO add historical invocations
 
-    Mock(String name, String path, int port, Closure predicate, Closure responseOk, boolean soap) {
+    Mock(String name, String path, int port) {
         this.name = name
-        this.predicate = predicate
-        this.responseOk = responseOk
-        this.soap = soap
         this.path = path
         this.port = port
     }

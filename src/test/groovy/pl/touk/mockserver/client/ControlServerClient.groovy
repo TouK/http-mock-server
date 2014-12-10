@@ -16,46 +16,50 @@ class ControlServerClient {
         address = "http://$host:$port/serverControl"
     }
 
-    void addMock(AddMockRequestData addMockRequestData){
+    void addMock(AddMockRequestData addMockRequestData) {
         HttpPost addMockPost = new HttpPost(address)
         addMockPost.entity = buildAddMockRequest(addMockRequestData)
         CloseableHttpResponse response = client.execute(addMockPost)
         GPathResult responseXml = Util.extractXmlResponse(response)
-        if(responseXml.name() != 'mockAdded'){
-            throw new MockAlreadyExists()
+        if (responseXml.name() != 'mockAdded') {
+            if (responseXml.text() == 'mock already registered') {
+                throw new MockAlreadyExists()
+
+            }
+            throw new InvalidMockDefinitionException(responseXml.text())
         }
     }
 
-    int removeMock(String name){
+    int removeMock(String name) {
         HttpPost removeMockPost = new HttpPost(address)
-        removeMockPost.entity = buildRemoveMockRequest(new RemoveMockRequestData(name:name))
+        removeMockPost.entity = buildRemoveMockRequest(new RemoveMockRequestData(name: name))
         CloseableHttpResponse response = client.execute(removeMockPost)
         GPathResult responseXml = Util.extractXmlResponse(response)
-        if(responseXml.name() == 'mockRemoved'){
+        if (responseXml.name() == 'mockRemoved') {
             return responseXml.text() as int
         }
         throw new MockDoesNotExist()
     }
 
-
-    private StringEntity buildRemoveMockRequest(RemoveMockRequestData data){
+    private static StringEntity buildRemoveMockRequest(RemoveMockRequestData data) {
         return new StringEntity("""\
             <removeMock>
                 <name>${data.name}</name>
             </removeMock>
-        """,ContentType.create("text/xml", "UTF-8"))
+        """, ContentType.create("text/xml", "UTF-8"))
     }
 
-    private StringEntity buildAddMockRequest(AddMockRequestData data){
+    private static StringEntity buildAddMockRequest(AddMockRequestData data) {
         return new StringEntity("""\
             <addMock>
                 <name>${data.name}</name>
                 <path>${data.path}</path>
                 <port>${data.port}</port>
-                <predicate>${data.predicate}</predicate>
-                <response>${data.response}</response>
-                <soap>${data.soap}</soap>
+                ${data.predicate != null ? "<predicate>${data.predicate}</predicate>" : ''}
+                ${data.response != null ? "<response>${data.response}</response>" : ''}
+                ${data.soap != null ? "<soap>${data.soap}</soap>" : ''}
+                ${data.statusCode != null ? "<statusCode>${data.statusCode}</statusCode>" : ''}
             </addMock>
-        """,ContentType.create("text/xml", "UTF-8"))
+        """, ContentType.create("text/xml", "UTF-8"))
     }
 }

@@ -17,7 +17,6 @@ class HttpMockServer {
 
         httpServerWraper.createContext('/serverControl', {
             HttpExchange ex ->
-                ex.sendResponseHeaders(200, 0)
                 try{
                     GPathResult request = new XmlSlurper().parse(ex.requestBody)
                     if(ex.requestMethod== 'POST' && request.name() == 'addMock'){
@@ -41,10 +40,23 @@ class HttpMockServer {
         println "Adding $name"
         String mockPath = request.path
         int mockPort = Integer.valueOf(request.port as String)
-        Closure predicate = Eval.me(request.predicate as String) as Closure
-        Closure okResponse = Eval.me(request.response as String) as Closure
-        boolean soap = Boolean.valueOf(request.soap as String)
-        Mock mock = new Mock(name, mockPath, mockPort, predicate, okResponse, soap)
+        Mock mock = new Mock(name, mockPath, mockPort)
+        String predicate = request.predicate
+        if(predicate){
+            mock.predicate = Eval.me(predicate) as Closure
+        }
+        String okResponse = request.response
+        if(okResponse){
+            mock.responseOk = Eval.me(okResponse) as Closure
+        }
+        String soap = request.soap
+        if(soap){
+            mock.soap = Boolean.valueOf(soap)
+        }
+        String statusCode = request.statusCode
+        if(statusCode){
+            mock.statusCode = Integer.valueOf(statusCode)
+        }
         HttpServerWraper child = childServers.find { it.port == mockPort }
         if (!child) {
             child = new HttpServerWraper(mockPort)
@@ -52,6 +64,7 @@ class HttpMockServer {
         }
         child.addMock(mockPath, mock)
         mockNames << name
+        ex.sendResponseHeaders(200, 0)
         ex.responseBody << '<mockAdded/>'
         ex.responseBody.close()
     }
@@ -64,11 +77,13 @@ class HttpMockServer {
         println "Removing $name"
         int used = childServers.inject(0) { int res, HttpServerWraper server-> server.removeMock(name) + res}
         mockNames.remove(name)
+        ex.sendResponseHeaders(200, 0)
         ex.responseBody << "<mockRemoved>$used</mockRemoved>"
         ex.responseBody.close()
     }
 
     private static void createErrorResponse(HttpExchange ex, Exception e) {
+        ex.sendResponseHeaders(400, 0)
         ex.responseBody << """<exceptionOccured>${e.message}</exceptionOccured>"""
         ex.responseBody.close()
     }

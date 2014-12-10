@@ -7,6 +7,7 @@ import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
+import org.apache.http.util.EntityUtils
 import pl.touk.mockserver.client.*
 import spock.lang.Shared
 import spock.lang.Specification
@@ -73,7 +74,7 @@ class MockServerIntegrationTest extends Specification {
             controlServerClient.removeMock('testSoap') == 1
     }
 
-    def "should not remove when it does not exist"() {
+    def "should not remove mock when it does not exist"() {
         when:
             controlServerClient.removeMock('testSoap')
         then:
@@ -214,9 +215,62 @@ class MockServerIntegrationTest extends Specification {
             9998       | '/test2'   | 'another port and path'
     }
 
-    //TODO    def "should get mock report"(){}
-    //TODO    def "should get list mocks"(){}
-    //TODO    def "should dispatch rest mock with response code"(){}
+    @Unroll
+    def "should dispatch rest mock with response code"() {
+        given:
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest1',
+                    path: '/test1',
+                    port: 9999,
+                    statusCode: statusCode
+            ))
+            HttpPost request = new HttpPost('http://localhost:9999/test1')
+            request.entity = new StringEntity('<request1/>', ContentType.create("text/xml", "UTF-8"))
+        when:
+            CloseableHttpResponse response = client.execute(request)
+        then:
+            response.statusLine.statusCode == expectedStatusCode
+            EntityUtils.consumeQuietly(response.entity)
+        where:
+            statusCode | expectedStatusCode
+            null       | 200
+            300        | 300
+            204        | 204
+    }
+
+    def "should return response code 404 and error body when mocks does not apply"() {
+        given:
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest1',
+                    path: '/test1',
+                    port: 9999,
+                    predicate: '''{xml -> xml.name() == 'request2'}''',
+                    response: '''{xml -> "<goodResponseRest2/>"}'''
+            ))
+            HttpPost request = new HttpPost('http://localhost:9999/test1')
+            request.entity = new StringEntity('<request1/>', ContentType.create("text/xml", "UTF-8"))
+        when:
+            CloseableHttpResponse response = client.execute(request)
+        then:
+            response.statusLine.statusCode == 404
+            GPathResult secondXmlResponse = Util.extractXmlResponse(response)
+            secondXmlResponse.name() == 'invalidInput'
+    }
+
+    def "should inform that there was problem during adding mock - invalid port"(){
+        when:
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testSoap',
+                    path: '/testEndpoint2',
+                    port: -1,
+                    predicate: '''{xml -> true}''',
+                    response: '''{xml -> "<goodResponseSoap-${xml.name()}/>"}''',
+                    soap: true
+            ))
+        then:
+            thrown(InvalidMockDefinitionException)
+    }
+
     //TODO    def "should dispatch rest mock with post method"(){}
     //TODO    def "should dispatch rest mock with post method and request headers"(){}
     //TODO    def "should dispatch rest mock with post method and response headers"(){}
@@ -230,4 +284,8 @@ class MockServerIntegrationTest extends Specification {
     //TODO    def "should dispatch rest mock with delete method and request headers"(){}
     //TODO    def "should dispatch rest mock with delete method and response headers"(){}
     //TODO    def "should dispatch rest mocks with all methods"(){}
+
+    //TODO    def "should get mock report"(){}
+    //TODO    def "should get list mocks"(){}
+    //TODO    def "should validate mock when creating"
 }

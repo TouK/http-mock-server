@@ -9,6 +9,7 @@ class AddMockRequestData {
     String predicate
     String response
     Boolean soap
+    Integer statusCode
 
     void setPredicate(String predicate){
         this.predicate = StringEscapeUtils.escapeXml11(predicate)

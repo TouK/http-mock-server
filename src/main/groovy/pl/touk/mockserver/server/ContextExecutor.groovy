@@ -16,7 +16,6 @@ class ContextExecutor {
         this.mocks = new CopyOnWriteArrayList<>([initialMock])
         httpServerWraper.createContext(path,{
             HttpExchange ex ->
-                ex.sendResponseHeaders(200, 0)
                 String input = ex.requestBody.text
                 println "Mock received input"
                 GPathResult inputXml = new XmlSlurper().parseText(input)
@@ -31,6 +30,7 @@ class ContextExecutor {
                             }
                         }
                         if (xml != null && mock.predicate(xml)) {
+                            ex.sendResponseHeaders(mock.statusCode, 0)
                             println "Mock ${mock.name} invoked"
                             ++mock.counter
                             String response = mock.responseOk(xml)
@@ -42,6 +42,7 @@ class ContextExecutor {
                         e.printStackTrace()
                     }
                 }
+                ex.sendResponseHeaders(404, 0)
                 ex.responseBody << "<invalidInput/>"
                 ex.responseBody.close()
         })
