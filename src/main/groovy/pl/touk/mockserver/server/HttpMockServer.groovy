@@ -44,7 +44,7 @@ class HttpMockServer {
         Closure predicate = Eval.me(request.predicate as String) as Closure
         Closure okResponse = Eval.me(request.response as String) as Closure
         boolean soap = Boolean.valueOf(request.soap as String)
-        Mock mock = new Mock(name, predicate, okResponse, soap)
+        Mock mock = new Mock(name, mockPath, mockPort, predicate, okResponse, soap)
         HttpServerWraper child = childServers.find { it.port == mockPort }
         if (!child) {
             child = new HttpServerWraper(mockPort)

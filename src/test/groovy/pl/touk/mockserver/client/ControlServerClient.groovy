@@ -16,12 +16,14 @@ class ControlServerClient {
         address = "http://$host:$port/serverControl"
     }
 
-    boolean addMock(AddMockRequestData addMockRequestData){
+    void addMock(AddMockRequestData addMockRequestData){
         HttpPost addMockPost = new HttpPost(address)
         addMockPost.entity = buildAddMockRequest(addMockRequestData)
         CloseableHttpResponse response = client.execute(addMockPost)
         GPathResult responseXml = Util.extractXmlResponse(response)
-        return responseXml.name() == 'mockAdded'
+        if(responseXml.name() != 'mockAdded'){
+            throw new MockAlreadyExists()
+        }
     }
 
     int removeMock(String name){
@@ -29,7 +31,10 @@ class ControlServerClient {
         removeMockPost.entity = buildRemoveMockRequest(new RemoveMockRequestData(name:name))
         CloseableHttpResponse response = client.execute(removeMockPost)
         GPathResult responseXml = Util.extractXmlResponse(response)
-        return responseXml.name() == 'mockRemoved' ? responseXml.text() as int:-1
+        if(responseXml.name() == 'mockRemoved'){
+            return responseXml.text() as int
+        }
+        throw new MockDoesNotExist()
     }
 
 
