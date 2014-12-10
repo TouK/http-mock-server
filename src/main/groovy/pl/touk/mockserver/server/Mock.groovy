@@ -11,7 +11,7 @@ class Mock {
     Closure responseOk = { xml -> '' }
     boolean soap = false
     int statusCode = 200
-    //TODO add http method - default POST
+    String method = 'POST'
     //TODO add request headers - default [:]
     //TODO add response headers - default [:]
     int counter = 0

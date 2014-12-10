@@ -18,10 +18,9 @@ class ContextExecutor {
             HttpExchange ex ->
                 String input = ex.requestBody.text
                 println "Mock received input"
-                GPathResult inputXml = new XmlSlurper().parseText(input)
                 for (Mock mock : mocks){
-                    GPathResult xml = inputXml
                     try {
+                        GPathResult xml = input ? new XmlSlurper().parseText(input) : null
                         if (mock.soap) {
                             if(xml.name() == 'Envelope' && xml.Body.size() > 0){
                                 xml = getSoapBodyContent(xml)
@@ -29,7 +28,7 @@ class ContextExecutor {
                                 continue
                             }
                         }
-                        if (xml != null && mock.predicate(xml)) {
+                        if (ex.requestMethod == mock.method && mock.predicate(xml)) {
                             ex.sendResponseHeaders(mock.statusCode, 0)
                             println "Mock ${mock.name} invoked"
                             ++mock.counter

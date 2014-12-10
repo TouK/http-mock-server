@@ -10,14 +10,24 @@ class AddMockRequestData {
     String response
     Boolean soap
     Integer statusCode
+    Method method
 
-    void setPredicate(String predicate){
+    void setPredicate(String predicate) {
         this.predicate = StringEscapeUtils.escapeXml11(predicate)
     }
 
-    void setResponse(String response){
+    void setResponse(String response) {
         this.response = StringEscapeUtils.escapeXml11(response)
     }
 
-
+    enum Method {
+        POST,
+        GET,
+        DELETE,
+        PUT,
+        TRACE,
+        HEAD,
+        OPTIONS,
+        PATCH
+    }
 }

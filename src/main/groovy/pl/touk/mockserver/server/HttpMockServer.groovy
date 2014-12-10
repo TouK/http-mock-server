@@ -57,6 +57,10 @@ class HttpMockServer {
         if(statusCode){
             mock.statusCode = Integer.valueOf(statusCode)
         }
+        String method = request.method
+        if(method){
+            mock.method = method
+        }
         HttpServerWraper child = childServers.find { it.port == mockPort }
         if (!child) {
             child = new HttpServerWraper(mockPort)

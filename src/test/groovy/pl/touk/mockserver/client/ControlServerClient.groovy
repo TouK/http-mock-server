@@ -55,10 +55,11 @@ class ControlServerClient {
                 <name>${data.name}</name>
                 <path>${data.path}</path>
                 <port>${data.port}</port>
-                ${data.predicate != null ? "<predicate>${data.predicate}</predicate>" : ''}
-                ${data.response != null ? "<response>${data.response}</response>" : ''}
+                ${data.predicate ? "<predicate>${data.predicate}</predicate>" : ''}
+                ${data.response ? "<response>${data.response}</response>" : ''}
                 ${data.soap != null ? "<soap>${data.soap}</soap>" : ''}
-                ${data.statusCode != null ? "<statusCode>${data.statusCode}</statusCode>" : ''}
+                ${data.statusCode ? "<statusCode>${data.statusCode}</statusCode>" : ''}
+                ${data.method ? "<method>${data.method}</method>" : ''}
             </addMock>
         """, ContentType.create("text/xml", "UTF-8"))
     }

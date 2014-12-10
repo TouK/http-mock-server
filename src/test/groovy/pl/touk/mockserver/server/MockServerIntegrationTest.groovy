@@ -1,8 +1,7 @@
 package pl.touk.mockserver.server
 
 import groovy.util.slurpersupport.GPathResult
-import org.apache.http.client.methods.CloseableHttpResponse
-import org.apache.http.client.methods.HttpPost
+import org.apache.http.client.methods.*
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.CloseableHttpClient
@@ -257,7 +256,7 @@ class MockServerIntegrationTest extends Specification {
             secondXmlResponse.name() == 'invalidInput'
     }
 
-    def "should inform that there was problem during adding mock - invalid port"(){
+    def "should inform that there was problem during adding mock - invalid port"() {
         when:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testSoap',
@@ -271,21 +270,176 @@ class MockServerIntegrationTest extends Specification {
             thrown(InvalidMockDefinitionException)
     }
 
-    //TODO    def "should dispatch rest mock with post method"(){}
+    def "should dispatch rest mock with get method"() {
+        given:
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest',
+                    path: '/testEndpoint',
+                    port: 9999,
+                    response: '''{xml -> "<defaultResponse/>"}'''
+            ))
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest2',
+                    path: '/testEndpoint',
+                    port: 9999,
+                    response: '''{xml -> "<getResponse/>"}''',
+                    method: AddMockRequestData.Method.GET
+            ))
+            HttpGet restGet = new HttpGet('http://localhost:9999/testEndpoint')
+        when:
+            CloseableHttpResponse response = client.execute(restGet)
+        then:
+            GPathResult restPostResponse = Util.extractXmlResponse(response)
+            restPostResponse.name() == 'getResponse'
+    }
+
+    def "should dispatch rest mock with trace method"() {
+        given:
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest',
+                    path: '/testEndpoint',
+                    port: 9999,
+                    response: '''{xml -> "<defaultResponse/>"}'''
+            ))
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest2',
+                    path: '/testEndpoint',
+                    port: 9999,
+                    response: '''{xml -> "<traceResponse/>"}''',
+                    method: AddMockRequestData.Method.TRACE
+            ))
+            HttpTrace restTrace = new HttpTrace('http://localhost:9999/testEndpoint')
+        when:
+            CloseableHttpResponse response = client.execute(restTrace)
+        then:
+            GPathResult restPostResponse = Util.extractXmlResponse(response)
+            restPostResponse.name() == 'traceResponse'
+    }
+
+    def "should dispatch rest mock with head method"() {
+        given:
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest',
+                    path: '/testEndpoint',
+                    port: 9999,
+                    response: '''{xml -> "<defaultResponse/>"}'''
+            ))
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest2',
+                    path: '/testEndpoint',
+                    port: 9999,
+                    method: AddMockRequestData.Method.HEAD
+            ))
+            HttpHead restHead = new HttpHead('http://localhost:9999/testEndpoint')
+        when:
+            CloseableHttpResponse response = client.execute(restHead)
+        then:
+            response.statusLine.statusCode == 200
+            EntityUtils.consumeQuietly(response.entity)
+            //TODO check headers
+    }
+
+    def "should dispatch rest mock with options method"() {
+        given:
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest',
+                    path: '/testEndpoint',
+                    port: 9999,
+                    response: '''{xml -> "<defaultResponse/>"}'''
+            ))
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest2',
+                    path: '/testEndpoint',
+                    port: 9999,
+                    method: AddMockRequestData.Method.OPTIONS
+            ))
+            HttpOptions restOptions = new HttpOptions('http://localhost:9999/testEndpoint')
+        when:
+            CloseableHttpResponse response = client.execute(restOptions)
+        then:
+            response.statusLine.statusCode == 200
+            EntityUtils.consumeQuietly(response.entity)
+    }
+
+    def "should dispatch rest mock with put method"() {
+        given:
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest',
+                    path: '/test1',
+                    port: 9999,
+                    response: '''{xml -> "<defaultResponse/>"}'''
+            ))
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest2',
+                    path: '/test1',
+                    port: 9999,
+                    predicate: '''{xml -> xml.name() == 'request1'}''',
+                    response: '''{xml -> "<goodResponseRest1/>"}''',
+                    method: AddMockRequestData.Method.PUT
+            ))
+            HttpPut request = new HttpPut('http://localhost:9999/test1')
+            request.entity = new StringEntity('<request1/>', ContentType.create("text/xml", "UTF-8"))
+        when:
+            CloseableHttpResponse response = client.execute(request)
+        then:
+            GPathResult secondXmlResponse = Util.extractXmlResponse(response)
+            secondXmlResponse.name() == 'goodResponseRest1'
+    }
+
+    def "should dispatch rest mock with delete method"() {
+        given:
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest',
+                    path: '/test1',
+                    port: 9999,
+                    response: '''{xml -> "<defaultResponse/>"}'''
+            ))
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest2',
+                    path: '/test1',
+                    port: 9999,
+                    response: '''{xml -> "<goodResponseRest1/>"}''',
+                    method: AddMockRequestData.Method.DELETE
+            ))
+            HttpDelete request = new HttpDelete('http://localhost:9999/test1')
+        when:
+            CloseableHttpResponse response = client.execute(request)
+        then:
+            GPathResult secondXmlResponse = Util.extractXmlResponse(response)
+            secondXmlResponse.name() == 'goodResponseRest1'
+    }
+
+    def "should dispatch rest mock with patch method"() {
+        given:
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest',
+                    path: '/test1',
+                    port: 9999,
+                    response: '''{xml -> "<defaultResponse/>"}'''
+            ))
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest2',
+                    path: '/test1',
+                    port: 9999,
+                    predicate: '''{xml -> xml.name() == 'request1'}''',
+                    response: '''{xml -> "<goodResponseRest1/>"}''',
+                    method: AddMockRequestData.Method.PATCH
+            ))
+            HttpPatch request = new HttpPatch('http://localhost:9999/test1')
+            request.entity = new StringEntity('<request1/>', ContentType.create("text/xml", "UTF-8"))
+        when:
+            CloseableHttpResponse response = client.execute(request)
+        then:
+            GPathResult secondXmlResponse = Util.extractXmlResponse(response)
+            secondXmlResponse.name() == 'goodResponseRest1'
+    }
+
     //TODO    def "should dispatch rest mock with post method and request headers"(){}
     //TODO    def "should dispatch rest mock with post method and response headers"(){}
-    //TODO    def "should dispatch rest mock with get method"(){}
-    //TODO    def "should dispatch rest mock with get method and request headers"(){}
-    //TODO    def "should dispatch rest mock with get method and response headers"(){}
-    //TODO    def "should dispatch rest mock with put method"(){}
-    //TODO    def "should dispatch rest mock with put method and request headers"(){}
-    //TODO    def "should dispatch rest mock with put method and response headers"(){}
-    //TODO    def "should dispatch rest mock with delete method"(){}
-    //TODO    def "should dispatch rest mock with delete method and request headers"(){}
-    //TODO    def "should dispatch rest mock with delete method and response headers"(){}
-    //TODO    def "should dispatch rest mocks with all methods"(){}
 
     //TODO    def "should get mock report"(){}
     //TODO    def "should get list mocks"(){}
     //TODO    def "should validate mock when creating"
+
+    //TODO    def "should handle json input and output"(){}
 }
