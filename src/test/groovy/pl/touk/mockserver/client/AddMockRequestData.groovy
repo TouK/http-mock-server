@@ -11,6 +11,7 @@ class AddMockRequestData {
     Boolean soap
     Integer statusCode
     Method method
+    String responseHeaders
 
     void setPredicate(String predicate) {
         this.predicate = StringEscapeUtils.escapeXml11(predicate)
@@ -18,6 +19,10 @@ class AddMockRequestData {
 
     void setResponse(String response) {
         this.response = StringEscapeUtils.escapeXml11(response)
+    }
+
+    void setResponseHeaders(String responseHeaders) {
+        this.responseHeaders = StringEscapeUtils.escapeXml11(responseHeaders)
     }
 
     enum Method {

@@ -336,7 +336,6 @@ class MockServerIntegrationTest extends Specification {
         then:
             response.statusLine.statusCode == 200
             EntityUtils.consumeQuietly(response.entity)
-            //TODO check headers
     }
 
     def "should dispatch rest mock with options method"() {
@@ -434,8 +433,28 @@ class MockServerIntegrationTest extends Specification {
             secondXmlResponse.name() == 'goodResponseRest1'
     }
 
+    def "should add mock that return headers"() {
+        given:
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest',
+                    path: '/testEndpoint',
+                    port: 9999,
+                    predicate: '''{xml -> xml.name() == 'request'}''',
+                    response: '''{xml -> "<goodResponse/>"}''',
+                    responseHeaders: '''{ xml -> [input:"${xml.name()}"]}'''
+            ))
+            HttpPost restPost = new HttpPost('http://localhost:9999/testEndpoint')
+            restPost.entity = new StringEntity('<request/>', ContentType.create("text/xml", "UTF-8"))
+        when:
+            CloseableHttpResponse response = client.execute(restPost)
+        then:
+            response.allHeaders.findAll { it.name == 'Input' && it.value == 'request' }
+            GPathResult restPostResponse = Util.extractXmlResponse(response)
+            restPostResponse.name() == 'goodResponse'
+    }
+
     //TODO    def "should dispatch rest mock with post method and request headers"(){}
-    //TODO    def "should dispatch rest mock with post method and response headers"(){}
+    //TODO    def "should dispatch rest mock with post method, response headers and request headers"(){}
 
     //TODO    def "should get mock report"(){}
     //TODO    def "should get list mocks"(){}

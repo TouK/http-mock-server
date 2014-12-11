@@ -60,6 +60,7 @@ class ControlServerClient {
                 ${data.soap != null ? "<soap>${data.soap}</soap>" : ''}
                 ${data.statusCode ? "<statusCode>${data.statusCode}</statusCode>" : ''}
                 ${data.method ? "<method>${data.method}</method>" : ''}
+                ${data.responseHeaders ? "<responseHeaders>${data.responseHeaders}</responseHeaders>" : ''}
             </addMock>
         """, ContentType.create("text/xml", "UTF-8"))
     }

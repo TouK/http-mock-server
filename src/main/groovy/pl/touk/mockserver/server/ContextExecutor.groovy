@@ -29,10 +29,11 @@ class ContextExecutor {
                             }
                         }
                         if (ex.requestMethod == mock.method && mock.predicate(xml)) {
-                            ex.sendResponseHeaders(mock.statusCode, 0)
                             println "Mock ${mock.name} invoked"
                             ++mock.counter
                             String response = mock.responseOk(xml)
+                            mock.responseHeaders(xml).each { ex.responseHeaders.add(it.key as String, it.value as String)}
+                            ex.sendResponseHeaders(mock.statusCode, 0)
                             ex.responseBody << (mock.soap ? wrapSoap(response) : response)
                             ex.responseBody.close()
                             return

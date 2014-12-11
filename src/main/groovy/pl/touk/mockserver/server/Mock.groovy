@@ -13,7 +13,7 @@ class Mock {
     int statusCode = 200
     String method = 'POST'
     //TODO add request headers - default [:]
-    //TODO add response headers - default [:]
+    Closure responseHeaders = {xml -> [:]}
     int counter = 0
     //TODO add historical invocations
 
