@@ -14,17 +14,17 @@ class ContextExecutor {
         this.httpServerWraper = httpServerWraper
         this.path = path
         this.mocks = new CopyOnWriteArrayList<>([initialMock])
-        httpServerWraper.createContext(path,{
+        httpServerWraper.createContext(path, {
             HttpExchange ex ->
                 String input = ex.requestBody.text
                 println "Mock received input"
-                for (Mock mock : mocks){
+                for (Mock mock : mocks) {
                     try {
                         GPathResult xml = input ? new XmlSlurper().parseText(input) : null
                         if (mock.soap) {
-                            if(xml.name() == 'Envelope' && xml.Body.size() > 0){
+                            if (xml.name() == 'Envelope' && xml.Body.size() > 0) {
                                 xml = getSoapBodyContent(xml)
-                            }else{
+                            } else {
                                 continue
                             }
                         }
@@ -32,13 +32,17 @@ class ContextExecutor {
                             println "Mock ${mock.name} invoked"
                             ++mock.counter
                             String response = mock.responseOk(xml)
-                            mock.responseHeaders(xml).each { ex.responseHeaders.add(it.key as String, it.value as String)}
-                            ex.sendResponseHeaders(mock.statusCode, 0)
-                            ex.responseBody << (mock.soap ? wrapSoap(response) : response)
-                            ex.responseBody.close()
+                            mock.responseHeaders(xml).each {
+                                ex.responseHeaders.add(it.key as String, it.value as String)
+                            }
+                            ex.sendResponseHeaders(mock.statusCode, response ? 0 : -1)
+                            if (response) {
+                                ex.responseBody << (mock.soap ? wrapSoap(response) : response)
+                                ex.responseBody.close()
+                            }
                             return
                         }
-                    }catch (Exception e){
+                    } catch (Exception e) {
                         e.printStackTrace()
                     }
                 }
@@ -53,14 +57,15 @@ class ContextExecutor {
     }
 
     int removeMock(String name) {
-        Mock mock = mocks.find {it.name == name}
-        if(mock){
+        Mock mock = mocks.find { it.name == name }
+        if (mock) {
             mocks.remove(mock)
+            return mock.counter
         }
-        return mock.counter
+        return 0
     }
 
-    void addMock(Mock mock){
+    void addMock(Mock mock) {
         mocks << mock
     }
 
