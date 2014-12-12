@@ -65,6 +65,10 @@ class HttpMockServer {
         if(responseHeaders){
             mock.responseHeaders = Eval.me(responseHeaders) as Closure
         }
+        String requestHeaders = request.requestHeaders
+        if(requestHeaders){
+            mock.requestHeaders = Eval.me(requestHeaders) as Closure
+        }
         HttpServerWraper child = childServers.find { it.port == mockPort }
         if (!child) {
             child = new HttpServerWraper(mockPort)

@@ -61,6 +61,7 @@ class ControlServerClient {
                 ${data.statusCode ? "<statusCode>${data.statusCode}</statusCode>" : ''}
                 ${data.method ? "<method>${data.method}</method>" : ''}
                 ${data.responseHeaders ? "<responseHeaders>${data.responseHeaders}</responseHeaders>" : ''}
+                ${data.requestHeaders ? "<requestHeaders>${data.requestHeaders}</requestHeaders>" : ''}
             </addMock>
         """, ContentType.create("text/xml", "UTF-8"))
     }

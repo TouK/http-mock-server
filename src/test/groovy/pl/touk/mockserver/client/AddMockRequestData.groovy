@@ -12,6 +12,7 @@ class AddMockRequestData {
     Integer statusCode
     Method method
     String responseHeaders
+    String requestHeaders
 
     void setPredicate(String predicate) {
         this.predicate = StringEscapeUtils.escapeXml11(predicate)
@@ -23,6 +24,10 @@ class AddMockRequestData {
 
     void setResponseHeaders(String responseHeaders) {
         this.responseHeaders = StringEscapeUtils.escapeXml11(responseHeaders)
+    }
+
+    void setRequestHeaders(String requestHeaders) {
+        this.requestHeaders = StringEscapeUtils.escapeXml11(requestHeaders)
     }
 
     enum Method {

@@ -28,7 +28,10 @@ class ContextExecutor {
                                 continue
                             }
                         }
-                        if (ex.requestMethod == mock.method && mock.predicate(xml)) {
+                        Map<String,String> headers = ex.requestHeaders.collectEntries { [it.key.toLowerCase(), it.value.join(',')] }
+                        if (ex.requestMethod == mock.method &&
+                                mock.predicate(xml) &&
+                                mock.requestHeaders(headers)) {
                             println "Mock ${mock.name} invoked"
                             ++mock.counter
                             String response = mock.responseOk(xml)
