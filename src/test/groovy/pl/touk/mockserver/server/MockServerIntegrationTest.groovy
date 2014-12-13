@@ -11,6 +11,7 @@ import pl.touk.mockserver.client.*
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
+import pl.touk.mockserver.client.Util
 
 class MockServerIntegrationTest extends Specification {
 

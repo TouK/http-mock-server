@@ -30,9 +30,7 @@ class ContextExecutor {
                         e.printStackTrace()
                     }
                 }
-                ex.sendResponseHeaders(404, 0)
-                ex.responseBody << request.text
-                ex.responseBody.close()
+                Util.createResponse(ex, request.text, 404)
         })
     }
 
@@ -48,12 +46,7 @@ class ContextExecutor {
         response.headers.each {
             httpExchange.responseHeaders.add(it.key, it.value)
         }
-        String responseText = response.response
-        httpExchange.sendResponseHeaders(response.statusCode, responseText ? responseText.length() : -1)
-        if (responseText) {
-            httpExchange.responseBody << responseText
-            httpExchange.responseBody.close()
-        }
+        Util.createResponse(httpExchange, response.text, response.statusCode)
     }
 
     int removeMock(String name) {
@@ -69,7 +62,7 @@ class ContextExecutor {
         mocks << mock
     }
 
-    List<Mock> getMocks(){
+    List<Mock> getMocks() {
         return mocks
     }
 }

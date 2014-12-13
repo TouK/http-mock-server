@@ -29,10 +29,10 @@ class ServerMockPT extends Specification {
                     int port = 9000 + (current % 7)
                     controlServerClient.addMock(new AddMockRequestData(
                             name: "testRest$current",
-                            path: "/testEndpoint$endpointNumber",
+                            path: "testEndpoint$endpointNumber",
                             port: port,
-                            predicate: """{xml -> xml.name() == 'request$current'}""",
-                            response: """{xml -> "<goodResponse$current/>"}"""
+                            predicate: """{req -> req.xml.name() == 'request$current'}""",
+                            response: """{req -> "<goodResponse$current/>"}"""
                     ))
                     HttpPost restPost = new HttpPost("http://localhost:$port/testEndpoint$endpointNumber")
                     restPost.entity = new StringEntity("<request$current/>", ContentType.create("text/xml", "UTF-8"))

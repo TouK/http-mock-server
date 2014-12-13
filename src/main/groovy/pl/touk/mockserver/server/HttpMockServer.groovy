@@ -3,9 +3,12 @@ package pl.touk.mockserver.server
 import com.sun.net.httpserver.HttpExchange
 import groovy.transform.PackageScope
 import groovy.util.slurpersupport.GPathResult
+import groovy.xml.MarkupBuilder
 
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CopyOnWriteArraySet
+
+import static pl.touk.mockserver.server.Util.createResponse
 
 @PackageScope
 class HttpMockServer {
@@ -34,7 +37,6 @@ class HttpMockServer {
                     } else {
                         throw new RuntimeException('Unknown request')
                     }
-                    //TODO add get mock report
                 } catch (Exception e) {
                     createErrorResponse(ex, e)
                 }
@@ -42,10 +44,19 @@ class HttpMockServer {
     }
 
     void listMocks(HttpExchange ex) {
-        String response = '<mocks>' + listMocks().join('') + '</mocks>'
-        ex.sendResponseHeaders(200, 0)
-        ex.responseBody << response
-        ex.responseBody.close()
+        StringWriter sw = new StringWriter()
+        MarkupBuilder builder = new MarkupBuilder(sw)
+        builder.mocks {
+            listMocks().each {
+                Mock mock ->
+                    builder.mock {
+                        name mock.name
+                        path mock.path
+                        port mock.port
+                    }
+            }
+        }
+        createResponse(ex, sw.toString(), 200)
     }
 
     Set<Mock> listMocks() {
@@ -61,9 +72,7 @@ class HttpMockServer {
         HttpServerWraper child = getOrCreateChildServer(mock.port)
         child.addMock(mock)
         mockNames << name
-        ex.sendResponseHeaders(200, 0)
-        ex.responseBody << '<mockAdded/>'
-        ex.responseBody.close()
+        createResponse(ex, '<mockAdded/>', 200)
     }
 
     private static Mock mockFromRequest(GPathResult request) {
@@ -97,15 +106,17 @@ class HttpMockServer {
         println "Removing $name"
         int used = childServers.inject(0) { int res, HttpServerWraper server -> server.removeMock(name) + res }
         mockNames.remove(name)
-        ex.sendResponseHeaders(200, 0)
-        ex.responseBody << "<mockRemoved>$used</mockRemoved>"
-        ex.responseBody.close()
+        StringWriter sw = new StringWriter()
+        MarkupBuilder builder = new MarkupBuilder(sw)
+        builder.mockRemoved used
+        createResponse(ex, sw.toString(), 200)
     }
 
     private static void createErrorResponse(HttpExchange ex, Exception e) {
-        ex.sendResponseHeaders(400, 0)
-        ex.responseBody << """<exceptionOccured>${e.message}</exceptionOccured>"""
-        ex.responseBody.close()
+        StringWriter sw = new StringWriter()
+        MarkupBuilder builder = new MarkupBuilder(sw)
+        builder.exceptionOccured e.message
+        createResponse(ex, sw.toString(), 400)
     }
 
     void stop() {
