@@ -1,14 +1,17 @@
 package pl.touk.mockserver.client
 
 import groovy.json.JsonSlurper
-import groovy.transform.PackageScope
+import groovy.transform.CompileStatic
+import groovy.transform.TypeChecked
 import groovy.util.slurpersupport.GPathResult
 import org.apache.http.HttpEntity
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.util.EntityUtils
 
+@CompileStatic
+@TypeChecked
 class Util {
-    static GPathResult extractXmlResponse(CloseableHttpResponse response){
+    static GPathResult extractXmlResponse(CloseableHttpResponse response) {
         HttpEntity entity = response.entity
         GPathResult xml = new XmlSlurper().parseText(EntityUtils.toString(entity))
         EntityUtils.consumeQuietly(entity)

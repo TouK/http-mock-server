@@ -1,3 +1,8 @@
 package pl.touk.mockserver.client
 
-class MockAlreadyExists extends RuntimeException{}
+import groovy.transform.CompileStatic
+import groovy.transform.TypeChecked
+
+@CompileStatic
+@TypeChecked
+class MockAlreadyExists extends RuntimeException {}

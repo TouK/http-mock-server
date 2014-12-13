@@ -2,41 +2,43 @@ package pl.touk.mockserver.server
 
 import com.sun.net.httpserver.Headers
 import groovy.json.JsonSlurper
+import groovy.transform.PackageScope
 import groovy.util.slurpersupport.GPathResult
 
-class Request {
+@PackageScope
+class MockRequest {
     final String text
-    final Map<String,String> headers
-    final Map<String,String> query
+    final Map<String, String> headers
+    final Map<String, String> query
     final GPathResult xml
     final GPathResult soap
     final Object json
 
-    Request(String text, Headers headers, String query) {
+    MockRequest(String text, Headers headers, String query) {
         this.text = text
         this.headers = headersToMap(headers)
         this.query = queryParamsToMap(query)
         this.xml = inputToXml(text)
         this.soap = inputToSoap(xml)
-        this.json= inputToJson(text)
+        this.json = inputToJson(text)
     }
 
     private static GPathResult inputToXml(String text) {
-        try{
+        try {
             return new XmlSlurper().parseText(text)
-        }catch (Exception _){
+        } catch (Exception _) {
             return null
         }
     }
 
     private static GPathResult inputToSoap(GPathResult xml) {
-        try{
+        try {
             if (xml.name() == 'Envelope' && xml.Body.size() > 0) {
                 return getSoapBodyContent(xml)
             } else {
                 return null
             }
-        }catch (Exception _){
+        } catch (Exception _) {
             return null
         }
     }
@@ -46,9 +48,9 @@ class Request {
     }
 
     private static Object inputToJson(String text) {
-        try{
+        try {
             return new JsonSlurper().parseText(text)
-        }catch (Exception _){
+        } catch (Exception _) {
             return null
         }
     }

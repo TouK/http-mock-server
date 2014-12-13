@@ -1,6 +1,11 @@
 package pl.touk.mockserver.client
 
-class InvalidMockDefinitionException extends RuntimeException{
+import groovy.transform.CompileStatic
+import groovy.transform.TypeChecked
+
+@CompileStatic
+@TypeChecked
+class InvalidMockDefinitionException extends RuntimeException {
     InvalidMockDefinitionException(String s) {
         super(s)
     }

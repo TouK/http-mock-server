@@ -1,7 +1,7 @@
 package pl.touk.mockserver.server
 
 class Main {
-    static void main(String [] args) {
+    static void main(String[] args) {
         HttpMockServer httpMockServer = new HttpMockServer()
 
         Runtime.runtime.addShutdownHook(new Thread({
@@ -10,7 +10,7 @@ class Main {
             println 'Http server is stopped'
         } as Runnable))
 
-        while(true){
+        while (true) {
             Thread.sleep(10000)
         }
     }

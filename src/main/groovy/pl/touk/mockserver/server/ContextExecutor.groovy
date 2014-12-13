@@ -1,38 +1,29 @@
 package pl.touk.mockserver.server
 
 import com.sun.net.httpserver.HttpExchange
-import groovy.util.slurpersupport.GPathResult
+import groovy.transform.PackageScope
 
 import java.util.concurrent.CopyOnWriteArrayList
 
+@PackageScope
 class ContextExecutor {
     private final HttpServerWraper httpServerWraper
     final String path
     private final List<Mock> mocks
 
-    ContextExecutor(HttpServerWraper httpServerWraper, String path, Mock initialMock) {
+    ContextExecutor(HttpServerWraper httpServerWraper, Mock initialMock) {
         this.httpServerWraper = httpServerWraper
-        this.path = path
+        this.path = initialMock.path
         this.mocks = new CopyOnWriteArrayList<>([initialMock])
         httpServerWraper.createContext(path, {
             HttpExchange ex ->
-                Request request = new Request(ex.requestBody.text, ex.requestHeaders, ex.requestURI.query)
+                MockRequest request = new MockRequest(ex.requestBody.text, ex.requestHeaders, ex.requestURI.query)
                 println "Mock received input"
                 for (Mock mock : mocks) {
                     try {
-                        if (ex.requestMethod == mock.method &&
-                                mock.predicate(request)) {
-                            println "Mock ${mock.name} invoked"
-                            ++mock.counter
-                            String response = mock.responseOk(request)
-                            mock.responseHeaders(request).each {
-                                ex.responseHeaders.add(it.key as String, it.value as String)
-                            }
-                            ex.sendResponseHeaders(mock.statusCode, response ? 0 : -1)
-                            if (response) {
-                                ex.responseBody << (mock.soap ? wrapSoap(response) : response)
-                                ex.responseBody.close()
-                            }
+                        if (mock.match(ex.requestMethod, request)) {
+                            MockResponse httpResponse = mock.apply(request)
+                            fillExchange(ex, httpResponse)
                             return
                         }
                     } catch (Exception e) {
@@ -43,6 +34,18 @@ class ContextExecutor {
                 ex.responseBody << request.text
                 ex.responseBody.close()
         })
+    }
+
+    private static void fillExchange(HttpExchange httpExchange, MockResponse response) {
+        response.headers.each {
+            httpExchange.responseHeaders.add(it.key, it.value)
+        }
+        String responseText = response.response
+        httpExchange.sendResponseHeaders(response.statusCode, responseText ? responseText.length() : -1)
+        if (responseText) {
+            httpExchange.responseBody << responseText
+            httpExchange.responseBody.close()
+        }
     }
 
     int removeMock(String name) {
@@ -56,12 +59,5 @@ class ContextExecutor {
 
     void addMock(Mock mock) {
         mocks << mock
-    }
-
-    private static String wrapSoap(String request) {
-        """<?xml version='1.0' encoding='UTF-8'?>
-            <soap-env:Envelope xmlns:soap-env='http://schemas.xmlsoap.org/soap/envelope/' xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing">
-                <soap-env:Body>${request}</soap-env:Body>
-            </soap-env:Envelope>"""
     }
 }

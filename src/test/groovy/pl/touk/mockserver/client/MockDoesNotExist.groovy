@@ -1,4 +1,9 @@
 package pl.touk.mockserver.client
 
-class MockDoesNotExist extends RuntimeException{
+import groovy.transform.CompileStatic
+import groovy.transform.TypeChecked
+
+@CompileStatic
+@TypeChecked
+class MockDoesNotExist extends RuntimeException {
 }

@@ -334,8 +334,8 @@ class MockServerIntegrationTest extends Specification {
         when:
             CloseableHttpResponse response = client.execute(restHead)
         then:
-            response.statusLine.statusCode == 200
             EntityUtils.consumeQuietly(response.entity)
+            response.statusLine.statusCode == 200
     }
 
     def "should dispatch rest mock with options method"() {
