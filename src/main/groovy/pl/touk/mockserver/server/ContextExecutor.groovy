@@ -13,7 +13,7 @@ class ContextExecutor {
 
     ContextExecutor(HttpServerWraper httpServerWraper, Mock initialMock) {
         this.httpServerWraper = httpServerWraper
-        this.path = initialMock.path
+        this.path = '/' + initialMock.path
         this.mocks = new CopyOnWriteArrayList<>([initialMock])
         httpServerWraper.createContext(path, {
             HttpExchange ex ->
@@ -34,6 +34,14 @@ class ContextExecutor {
                 ex.responseBody << request.text
                 ex.responseBody.close()
         })
+    }
+
+    String getPath() {
+        return path.substring(1)
+    }
+
+    String getContextPath() {
+        return path
     }
 
     private static void fillExchange(HttpExchange httpExchange, MockResponse response) {
@@ -59,5 +67,8 @@ class ContextExecutor {
 
     void addMock(Mock mock) {
         mocks << mock
+    }
+
+    void stop(){
     }
 }

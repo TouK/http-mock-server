@@ -26,7 +26,7 @@ class ControlServerClient {
                 throw new MockAlreadyExists()
 
             }
-            throw new InvalidMockDefinitionException(responseXml.text())
+            throw new InvalidMockDefinition(responseXml.text())
         }
     }
 

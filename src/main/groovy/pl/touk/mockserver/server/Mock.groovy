@@ -18,6 +18,9 @@ class Mock {
     int counter = 0
 
     Mock(String name, String path, int port) {
+        if (!(name)) {
+            throw new RuntimeException("Mock name must be given")
+        }
         this.name = name
         this.path = path
         this.port = port
@@ -43,37 +46,37 @@ class Mock {
             </soap-env:Envelope>"""
     }
 
-    void setPredicate(String predicate){
+    void setPredicate(String predicate) {
         if (predicate) {
             this.predicate = Eval.me(predicate) as Closure
         }
     }
 
-    void setResponse(String response){
+    void setResponse(String response) {
         if (response) {
             this.response = Eval.me(response) as Closure
         }
     }
 
-    void setSoap(String soap){
+    void setSoap(String soap) {
         if (soap) {
             this.soap = Boolean.valueOf(soap)
         }
     }
 
-    void setStatusCode(String statusCode){
+    void setStatusCode(String statusCode) {
         if (statusCode) {
             this.statusCode = Integer.valueOf(statusCode)
         }
     }
 
-    void setMethod(String method){
-        if(method){
+    void setMethod(String method) {
+        if (method) {
             this.method = method
         }
     }
 
-    void setResponseHeaders(String responseHeaders){
+    void setResponseHeaders(String responseHeaders) {
         if (responseHeaders) {
             this.responseHeaders = Eval.me(responseHeaders) as Closure
         }

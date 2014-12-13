@@ -38,7 +38,7 @@ class HttpServerWraper {
     }
 
     void stop() {
-        executors.each { httpServer.removeContext(it.path) }
+        executors.each { httpServer.removeContext(it.contextPath) }
         httpServer.stop(0)
     }
 

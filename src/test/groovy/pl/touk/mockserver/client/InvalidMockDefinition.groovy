@@ -5,8 +5,8 @@ import groovy.transform.TypeChecked
 
 @CompileStatic
 @TypeChecked
-class InvalidMockDefinitionException extends RuntimeException {
-    InvalidMockDefinitionException(String s) {
+class InvalidMockDefinition extends RuntimeException {
+    InvalidMockDefinition(String s) {
         super(s)
     }
 }

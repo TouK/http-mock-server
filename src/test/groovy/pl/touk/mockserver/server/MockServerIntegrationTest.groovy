@@ -34,7 +34,7 @@ class MockServerIntegrationTest extends Specification {
         expect:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest',
-                    path: '/testEndpoint',
+                    path: 'testEndpoint',
                     port: 9999,
                     predicate: '''{req -> req.xml.name() == 'request'}''',
                     response: '''{req -> "<goodResponseRest-${req.xml.name()}/>"}''',
@@ -55,7 +55,7 @@ class MockServerIntegrationTest extends Specification {
         expect:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testSoap',
-                    path: '/testEndpoint',
+                    path: 'testEndpoint',
                     port: 9999,
                     predicate: '''{req -> req.soap.name() == 'request'}''',
                     response: '''{req -> "<goodResponseSoap-${req.soap.name()}/>"}''',
@@ -81,7 +81,7 @@ class MockServerIntegrationTest extends Specification {
         expect:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testSoap',
-                    path: '/testEndpoint',
+                    path: 'testEndpoint',
                     port: 9999,
                     predicate: '''{req -> req.xml.name() == 'request'}''',
                     response: '''{req -> "<goodResponseSoap-${req.xml.name()}/>"}''',
@@ -99,7 +99,7 @@ class MockServerIntegrationTest extends Specification {
         expect:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testSoap',
-                    path: '/testEndpoint',
+                    path: 'testEndpoint',
                     port: 9999,
                     predicate: '''{req -> req.xml.name() == 'request'}''',
                     response: '''{req -> "<goodResponseSoap-${req.xml.name()}/>"}''',
@@ -108,7 +108,7 @@ class MockServerIntegrationTest extends Specification {
         when:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testSoap',
-                    path: '/testEndpoint2',
+                    path: 'testEndpoint2',
                     port: 9998,
                     predicate: '''{req -> req.xml.name() == 'request'}''',
                     response: '''{req -> "<goodResponseSoap-${req.xml.name()}/>"}''',
@@ -118,11 +118,25 @@ class MockServerIntegrationTest extends Specification {
             thrown(MockAlreadyExists)
     }
 
+    def "should not add mock with empty name"() {
+        when:
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: '',
+                    path: 'testEndpoint2',
+                    port: 9998,
+                    predicate: '''{req -> req.xml.name() == 'request'}''',
+                    response: '''{req -> "<goodResponseSoap-${req.xml.name()}/>"}''',
+                    soap: true
+            ))
+        then:
+            thrown(InvalidMockDefinition)
+    }
+
     def "should add mock after deleting old mock with the same name"() {
         expect:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testSoap',
-                    path: '/testEndpoint',
+                    path: 'testEndpoint',
                     port: 9999,
                     predicate: '''{req -> req.xml.name() == 'request'}''',
                     response: '''{req -> "<goodResponseSoap-${req.name()}/>"}''',
@@ -133,7 +147,7 @@ class MockServerIntegrationTest extends Specification {
         and:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testSoap',
-                    path: '/testEndpoint',
+                    path: 'testEndpoint',
                     port: 9999,
                     predicate: '''{req -> req.xml.name() == 'request2'}''',
                     response: '''{req -> "<goodResponseSoap2-${req.xml.name()}/>"}''',
@@ -145,14 +159,14 @@ class MockServerIntegrationTest extends Specification {
         given:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest',
-                    path: '/testEndpoint',
+                    path: 'testEndpoint',
                     port: 9999,
                     predicate: '''{req -> req.xml.name() == 'request'}''',
                     response: '''{req -> "<goodResponseRest-${req.xml.name()}/>"}'''
             ))
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testSoap',
-                    path: '/testEndpoint',
+                    path: 'testEndpoint',
                     port: 9999,
                     predicate: '''{req -> req.soap.name() == 'request'}''',
                     response: '''{req -> "<goodResponseSoap-${req.soap.name()}/>"}''',
@@ -180,7 +194,7 @@ class MockServerIntegrationTest extends Specification {
         given:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest1',
-                    path: '/test1',
+                    path: 'test1',
                     port: 9999,
                     predicate: '''{req -> req.xml.name() == 'request1'}''',
                     response: '''{req -> "<goodResponseRest1/>"}'''
@@ -194,7 +208,7 @@ class MockServerIntegrationTest extends Specification {
             ))
             HttpPost firstRequest = new HttpPost('http://localhost:9999/test1')
             firstRequest.entity = new StringEntity('<request1/>', ContentType.create("text/xml", "UTF-8"))
-            HttpPost secondRequest = new HttpPost("http://localhost:${secondPort}${secondPath}")
+            HttpPost secondRequest = new HttpPost("http://localhost:${secondPort}/${secondPath}")
             secondRequest.entity = new StringEntity('<request2/>', ContentType.create("text/xml", "UTF-8"))
         when:
             CloseableHttpResponse firstResponse = client.execute(firstRequest)
@@ -208,10 +222,10 @@ class MockServerIntegrationTest extends Specification {
             secondXmlResponse.name() == 'goodResponseRest2'
         where:
             secondPort | secondPath | name
-            9999       | '/test1'   | 'the same port and path'
-            9998       | '/test1'   | 'the same path and another port'
-            9999       | '/test2'   | 'the same port and another path'
-            9998       | '/test2'   | 'another port and path'
+            9999       | 'test1'   | 'the same port and path'
+            9998       | 'test1'   | 'the same path and another port'
+            9999       | 'test2'   | 'the same port and another path'
+            9998       | 'test2'   | 'another port and path'
     }
 
     @Unroll
@@ -219,7 +233,7 @@ class MockServerIntegrationTest extends Specification {
         given:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest1',
-                    path: '/test1',
+                    path: 'test1',
                     port: 9999,
                     statusCode: statusCode
             ))
@@ -241,7 +255,7 @@ class MockServerIntegrationTest extends Specification {
         given:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest1',
-                    path: '/test1',
+                    path: 'test1',
                     port: 9999,
                     predicate: '''{req -> req.xml.name() == 'request2'}''',
                     response: '''{req -> "<goodResponseRest2/>"}'''
@@ -260,27 +274,27 @@ class MockServerIntegrationTest extends Specification {
         when:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testSoap',
-                    path: '/testEndpoint2',
+                    path: 'testEndpoint2',
                     port: -1,
                     predicate: '''{_ -> true}''',
                     response: '''{req -> "<goodResponseSoap-${req.xml.name()}/>"}''',
                     soap: true
             ))
         then:
-            thrown(InvalidMockDefinitionException)
+            thrown(InvalidMockDefinition)
     }
 
     def "should dispatch rest mock with get method"() {
         given:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest',
-                    path: '/testEndpoint',
+                    path: 'testEndpoint',
                     port: 9999,
                     response: '''{_ -> "<defaultResponse/>"}'''
             ))
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest2',
-                    path: '/testEndpoint',
+                    path: 'testEndpoint',
                     port: 9999,
                     response: '''{_ -> "<getResponse/>"}''',
                     method: AddMockRequestData.Method.GET
@@ -297,13 +311,13 @@ class MockServerIntegrationTest extends Specification {
         given:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest',
-                    path: '/testEndpoint',
+                    path: 'testEndpoint',
                     port: 9999,
                     response: '''{_ -> "<defaultResponse/>"}'''
             ))
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest2',
-                    path: '/testEndpoint',
+                    path: 'testEndpoint',
                     port: 9999,
                     response: '''{_ -> "<traceResponse/>"}''',
                     method: AddMockRequestData.Method.TRACE
@@ -320,13 +334,13 @@ class MockServerIntegrationTest extends Specification {
         given:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest',
-                    path: '/testEndpoint',
+                    path: 'testEndpoint',
                     port: 9999,
                     response: '''{_ -> "<defaultResponse/>"}'''
             ))
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest2',
-                    path: '/testEndpoint',
+                    path: 'testEndpoint',
                     port: 9999,
                     method: AddMockRequestData.Method.HEAD
             ))
@@ -342,13 +356,13 @@ class MockServerIntegrationTest extends Specification {
         given:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest',
-                    path: '/testEndpoint',
+                    path: 'testEndpoint',
                     port: 9999,
                     response: '''{_ -> "<defaultResponse/>"}'''
             ))
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest2',
-                    path: '/testEndpoint',
+                    path: 'testEndpoint',
                     port: 9999,
                     method: AddMockRequestData.Method.OPTIONS
             ))
@@ -364,13 +378,13 @@ class MockServerIntegrationTest extends Specification {
         given:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest',
-                    path: '/test1',
+                    path: 'test1',
                     port: 9999,
                     response: '''{_ -> "<defaultResponse/>"}'''
             ))
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest2',
-                    path: '/test1',
+                    path: 'test1',
                     port: 9999,
                     predicate: '''{req -> req.xml.name() == 'request1'}''',
                     response: '''{_ -> "<goodResponseRest1/>"}''',
@@ -389,13 +403,13 @@ class MockServerIntegrationTest extends Specification {
         given:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest',
-                    path: '/test1',
+                    path: 'test1',
                     port: 9999,
                     response: '''{_ -> "<defaultResponse/>"}'''
             ))
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest2',
-                    path: '/test1',
+                    path: 'test1',
                     port: 9999,
                     response: '''{_ -> "<goodResponseRest1/>"}''',
                     method: AddMockRequestData.Method.DELETE
@@ -412,13 +426,13 @@ class MockServerIntegrationTest extends Specification {
         given:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest',
-                    path: '/test1',
+                    path: 'test1',
                     port: 9999,
                     response: '''{_ -> "<defaultResponse/>"}'''
             ))
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest2',
-                    path: '/test1',
+                    path: 'test1',
                     port: 9999,
                     predicate: '''{req -> req.xml.name() == 'request1'}''',
                     response: '''{_ -> "<goodResponseRest1/>"}''',
@@ -437,7 +451,7 @@ class MockServerIntegrationTest extends Specification {
         given:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest',
-                    path: '/testEndpoint',
+                    path: 'testEndpoint',
                     port: 9999,
                     predicate: '''{req -> req.xml.name() == 'request'}''',
                     response: '''{_ -> "<goodResponse/>"}''',
@@ -457,7 +471,7 @@ class MockServerIntegrationTest extends Specification {
         given:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest',
-                    path: '/testEndpoint',
+                    path: 'testEndpoint',
                     port: 9999,
                     predicate: '''{ req -> req.headers['user-agent']?.startsWith('Mozilla') &&
                                             req.headers.pragma == 'no-cache'}''',
@@ -486,7 +500,7 @@ class MockServerIntegrationTest extends Specification {
         given:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest',
-                    path: '/testEndpoint',
+                    path: 'testEndpoint',
                     port: 9999,
                     predicate: '''{ req -> req.query['q'] == '15' &&
                                             req.query.id == '1'}''',
@@ -510,7 +524,7 @@ class MockServerIntegrationTest extends Specification {
         given:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest',
-                    path: '/testEndpoint',
+                    path: 'testEndpoint',
                     port: 9999,
                     predicate: '''{req -> req.text == 'hello=world&id=3'}''',
                     response: '''{_ -> "<goodResponse/>"}'''
@@ -535,7 +549,7 @@ class MockServerIntegrationTest extends Specification {
         given:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest',
-                    path: '/testEndpoint',
+                    path: 'testEndpoint',
                     port: 9999,
                     predicate: '''{req -> req.json.id == 1 && req.json.ar == ["a", true]}''',
                     response: '''{req -> """{"name":"goodResponse-${req.json.id}"}"""}'''
@@ -558,5 +572,4 @@ class MockServerIntegrationTest extends Specification {
 
     //TODO    def "should get mock report"(){}
     //TODO    def "should get list mocks"(){}
-    //TODO    def "should validate mock when creating"
 }
