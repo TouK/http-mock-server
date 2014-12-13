@@ -17,6 +17,12 @@ class ContextExecutor {
         httpServerWraper.createContext(path, {
             HttpExchange ex ->
                 String input = ex.requestBody.text
+                Map<String, String> queryParams = ex.requestURI.query?.split('&')?.collectEntries {
+                    String[] keyValue = it.split('='); [(keyValue[0]): keyValue[1]]
+                } ?: [:]
+                Map<String, String> headers = ex.requestHeaders.collectEntries {
+                    [it.key.toLowerCase(), it.value.join(',')]
+                }
                 println "Mock received input"
                 for (Mock mock : mocks) {
                     try {
@@ -28,10 +34,10 @@ class ContextExecutor {
                                 continue
                             }
                         }
-                        Map<String,String> headers = ex.requestHeaders.collectEntries { [it.key.toLowerCase(), it.value.join(',')] }
                         if (ex.requestMethod == mock.method &&
                                 mock.predicate(xml) &&
-                                mock.requestHeaders(headers)) {
+                                mock.requestHeaders(headers) &&
+                                mock.queryParams(queryParams)) {
                             println "Mock ${mock.name} invoked"
                             ++mock.counter
                             String response = mock.responseOk(xml)

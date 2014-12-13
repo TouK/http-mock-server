@@ -62,6 +62,7 @@ class ControlServerClient {
                 ${data.method ? "<method>${data.method}</method>" : ''}
                 ${data.responseHeaders ? "<responseHeaders>${data.responseHeaders}</responseHeaders>" : ''}
                 ${data.requestHeaders ? "<requestHeaders>${data.requestHeaders}</requestHeaders>" : ''}
+                ${data.queryParams ? "<queryParams>${data.queryParams}</queryParams>" : ''}
             </addMock>
         """, ContentType.create("text/xml", "UTF-8"))
     }

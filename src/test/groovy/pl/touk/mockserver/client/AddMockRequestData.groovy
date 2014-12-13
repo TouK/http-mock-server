@@ -13,6 +13,7 @@ class AddMockRequestData {
     Method method
     String responseHeaders
     String requestHeaders
+    String queryParams
 
     void setPredicate(String predicate) {
         this.predicate = StringEscapeUtils.escapeXml11(predicate)
@@ -28,6 +29,10 @@ class AddMockRequestData {
 
     void setRequestHeaders(String requestHeaders) {
         this.requestHeaders = StringEscapeUtils.escapeXml11(requestHeaders)
+    }
+
+    void setQueryParams(String queryParams) {
+        this.queryParams = StringEscapeUtils.escapeXml11(queryParams)
     }
 
     enum Method {

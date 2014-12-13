@@ -14,8 +14,8 @@ class Mock {
     String method = 'POST'
     Closure requestHeaders = {hs -> true}
     Closure responseHeaders = {xml -> [:]}
+    Closure queryParams = {qs -> true}
     int counter = 0
-    //TODO add historical invocations
 
     Mock(String name, String path, int port) {
         this.name = name

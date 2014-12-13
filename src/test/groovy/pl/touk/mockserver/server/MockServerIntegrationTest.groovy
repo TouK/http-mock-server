@@ -453,7 +453,7 @@ class MockServerIntegrationTest extends Specification {
             restPostResponse.name() == 'goodResponse'
     }
 
-    def "should add mock that accepts only when certain headers exists"() {
+    def "should add mock that accepts only when certain request headers exists"() {
         given:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest',
@@ -482,8 +482,31 @@ class MockServerIntegrationTest extends Specification {
             restPostResponse.name() == 'goodResponse'
     }
 
-    //TODO    def "should dispatch rest mock with get method and query params"(){}
-    //TODO    def "should dispatch rest mock with get method and parameters"(){}
+    def "should add mock that accepts only when certain query params exists"() {
+        given:
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest',
+                    path: '/testEndpoint',
+                    port: 9999,
+                    response: '''{xml -> "<goodResponse/>"}''',
+                    queryParams: '''{ qp -> qp['q'] == '15' &&
+                                            qp.id == '1'}'''
+            ))
+            HttpPost restPost = new HttpPost('http://localhost:9999/testEndpoint?q=15&id=1')
+            HttpPost badRestPost = new HttpPost('http://localhost:9999/testEndpoint?q=15&id=2')
+        when:
+            CloseableHttpResponse badResponse = client.execute(badRestPost)
+        then:
+            GPathResult badRestPostResponse = Util.extractXmlResponse(badResponse)
+            badRestPostResponse.name() == 'invalidInput'
+        when:
+            CloseableHttpResponse response = client.execute(restPost)
+        then:
+            GPathResult restPostResponse = Util.extractXmlResponse(response)
+            restPostResponse.name() == 'goodResponse'
+    }
+
+    //TODO    def "should dispatch rest mock with post method and parameters"(){}
     //TODO    def "should dispatch rest mock with post method, response headers and request headers"(){}
 
     //TODO    def "should get mock report"(){}
