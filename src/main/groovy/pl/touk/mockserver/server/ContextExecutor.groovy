@@ -40,7 +40,7 @@ class ContextExecutor {
                     }
                 }
                 ex.sendResponseHeaders(404, 0)
-                ex.responseBody << "<invalidInput/>"
+                ex.responseBody << request.text
                 ex.responseBody.close()
         })
     }

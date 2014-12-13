@@ -237,7 +237,7 @@ class MockServerIntegrationTest extends Specification {
             204        | 204
     }
 
-    def "should return response code 404 and error body when mocks does not apply"() {
+    def "should return response code 404 and error body the same as request body when mocks does not apply"() {
         given:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest1',
@@ -253,7 +253,7 @@ class MockServerIntegrationTest extends Specification {
         then:
             response.statusLine.statusCode == 404
             GPathResult secondXmlResponse = Util.extractXmlResponse(response)
-            secondXmlResponse.name() == 'invalidInput'
+            secondXmlResponse.name() == 'request1'
     }
 
     def "should inform that there was problem during adding mock - invalid port"() {
@@ -473,8 +473,8 @@ class MockServerIntegrationTest extends Specification {
         when:
             CloseableHttpResponse badResponse = client.execute(badRestPost)
         then:
-            GPathResult badRestPostResponse = Util.extractXmlResponse(badResponse)
-            badRestPostResponse.name() == 'invalidInput'
+            badResponse.statusLine.statusCode == 404
+            Util.consumeResponse(badResponse)
         when:
             CloseableHttpResponse response = client.execute(restPost)
         then:
@@ -497,8 +497,8 @@ class MockServerIntegrationTest extends Specification {
         when:
             CloseableHttpResponse badResponse = client.execute(badRestPost)
         then:
-            GPathResult badRestPostResponse = Util.extractXmlResponse(badResponse)
-            badRestPostResponse.name() == 'invalidInput'
+            badResponse.statusLine.statusCode == 404
+            Util.consumeResponse(badResponse)
         when:
             CloseableHttpResponse response = client.execute(restPost)
         then:
@@ -522,8 +522,8 @@ class MockServerIntegrationTest extends Specification {
         when:
             CloseableHttpResponse badResponse = client.execute(badRestPost)
         then:
-            GPathResult badRestPostResponse = Util.extractXmlResponse(badResponse)
-            badRestPostResponse.name() == 'invalidInput'
+            badResponse.statusLine.statusCode == 404
+            Util.consumeResponse(badResponse)
         when:
             CloseableHttpResponse response = client.execute(restPost)
         then:
@@ -547,8 +547,8 @@ class MockServerIntegrationTest extends Specification {
         when:
             CloseableHttpResponse badResponse = client.execute(badRestPost)
         then:
-            GPathResult badRestPostResponse = Util.extractXmlResponse(badResponse)
-            badRestPostResponse.name() == 'invalidInput'
+            badResponse.statusLine.statusCode == 404
+            Util.consumeResponse(badResponse)
         when:
             CloseableHttpResponse response = client.execute(restPost)
         then:

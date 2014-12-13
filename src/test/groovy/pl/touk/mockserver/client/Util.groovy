@@ -28,4 +28,8 @@ class Util {
         EntityUtils.consumeQuietly(entity)
         return json
     }
+
+    static void consumeResponse(CloseableHttpResponse response) {
+        EntityUtils.consumeQuietly(response.entity)
+    }
 }
