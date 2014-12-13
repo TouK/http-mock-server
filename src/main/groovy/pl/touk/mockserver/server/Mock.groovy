@@ -7,14 +7,12 @@ class Mock {
     final String name
     final String path
     final int port
-    Closure predicate = { xml -> true }
-    Closure responseOk = { xml -> '' }
+    Closure predicate = { _ -> true }
+    Closure responseOk = { _ -> '' }
     boolean soap = false
     int statusCode = 200
     String method = 'POST'
-    Closure requestHeaders = {hs -> true}
-    Closure responseHeaders = {xml -> [:]}
-    Closure queryParams = {qs -> true}
+    Closure responseHeaders = {_ -> [:]}
     int counter = 0
 
     Mock(String name, String path, int port) {

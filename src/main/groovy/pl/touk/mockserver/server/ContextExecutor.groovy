@@ -16,32 +16,16 @@ class ContextExecutor {
         this.mocks = new CopyOnWriteArrayList<>([initialMock])
         httpServerWraper.createContext(path, {
             HttpExchange ex ->
-                String input = ex.requestBody.text
-                Map<String, String> queryParams = ex.requestURI.query?.split('&')?.collectEntries {
-                    String[] keyValue = it.split('='); [(keyValue[0]): keyValue[1]]
-                } ?: [:]
-                Map<String, String> headers = ex.requestHeaders.collectEntries {
-                    [it.key.toLowerCase(), it.value.join(',')]
-                }
+                Request request = new Request(ex.requestBody.text, ex.requestHeaders, ex.requestURI.query)
                 println "Mock received input"
                 for (Mock mock : mocks) {
                     try {
-                        GPathResult xml = input ? new XmlSlurper().parseText(input) : null
-                        if (mock.soap) {
-                            if (xml.name() == 'Envelope' && xml.Body.size() > 0) {
-                                xml = getSoapBodyContent(xml)
-                            } else {
-                                continue
-                            }
-                        }
                         if (ex.requestMethod == mock.method &&
-                                mock.predicate(xml) &&
-                                mock.requestHeaders(headers) &&
-                                mock.queryParams(queryParams)) {
+                                mock.predicate(request)) {
                             println "Mock ${mock.name} invoked"
                             ++mock.counter
-                            String response = mock.responseOk(xml)
-                            mock.responseHeaders(xml).each {
+                            String response = mock.responseOk(request)
+                            mock.responseHeaders(request).each {
                                 ex.responseHeaders.add(it.key as String, it.value as String)
                             }
                             ex.sendResponseHeaders(mock.statusCode, response ? 0 : -1)
@@ -59,10 +43,6 @@ class ContextExecutor {
                 ex.responseBody << "<invalidInput/>"
                 ex.responseBody.close()
         })
-    }
-
-    private static GPathResult getSoapBodyContent(GPathResult xml) {
-        return xml.Body.'**'[1]
     }
 
     int removeMock(String name) {

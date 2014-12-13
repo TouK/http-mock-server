@@ -36,8 +36,8 @@ class MockServerIntegrationTest extends Specification {
                     name: 'testRest',
                     path: '/testEndpoint',
                     port: 9999,
-                    predicate: '''{xml -> xml.name() == 'request'}''',
-                    response: '''{xml -> "<goodResponseRest-${xml.name()}/>"}''',
+                    predicate: '''{req -> req.xml.name() == 'request'}''',
+                    response: '''{req -> "<goodResponseRest-${req.xml.name()}/>"}''',
                     soap: false
             ))
         when:
@@ -57,8 +57,8 @@ class MockServerIntegrationTest extends Specification {
                     name: 'testSoap',
                     path: '/testEndpoint',
                     port: 9999,
-                    predicate: '''{xml -> xml.name() == 'request'}''',
-                    response: '''{xml -> "<goodResponseSoap-${xml.name()}/>"}''',
+                    predicate: '''{req -> req.soap.name() == 'request'}''',
+                    response: '''{req -> "<goodResponseSoap-${req.soap.name()}/>"}''',
                     soap: true
             ))
         when:
@@ -83,8 +83,8 @@ class MockServerIntegrationTest extends Specification {
                     name: 'testSoap',
                     path: '/testEndpoint',
                     port: 9999,
-                    predicate: '''{xml -> xml.name() == 'request'}''',
-                    response: '''{xml -> "<goodResponseSoap-${xml.name()}/>"}''',
+                    predicate: '''{req -> req.xml.name() == 'request'}''',
+                    response: '''{req -> "<goodResponseSoap-${req.xml.name()}/>"}''',
                     soap: true
             ))
         and:
@@ -101,8 +101,8 @@ class MockServerIntegrationTest extends Specification {
                     name: 'testSoap',
                     path: '/testEndpoint',
                     port: 9999,
-                    predicate: '''{xml -> xml.name() == 'request'}''',
-                    response: '''{xml -> "<goodResponseSoap-${xml.name()}/>"}''',
+                    predicate: '''{req -> req.xml.name() == 'request'}''',
+                    response: '''{req -> "<goodResponseSoap-${req.xml.name()}/>"}''',
                     soap: true
             ))
         when:
@@ -110,8 +110,8 @@ class MockServerIntegrationTest extends Specification {
                     name: 'testSoap',
                     path: '/testEndpoint2',
                     port: 9998,
-                    predicate: '''{xml -> xml.name() == 'request'}''',
-                    response: '''{xml -> "<goodResponseSoap-${xml.name()}/>"}''',
+                    predicate: '''{req -> req.xml.name() == 'request'}''',
+                    response: '''{req -> "<goodResponseSoap-${req.xml.name()}/>"}''',
                     soap: true
             ))
         then:
@@ -124,8 +124,8 @@ class MockServerIntegrationTest extends Specification {
                     name: 'testSoap',
                     path: '/testEndpoint',
                     port: 9999,
-                    predicate: '''{xml -> xml.name() == 'request'}''',
-                    response: '''{xml -> "<goodResponseSoap-${xml.name()}/>"}''',
+                    predicate: '''{req -> req.xml.name() == 'request'}''',
+                    response: '''{req -> "<goodResponseSoap-${req.name()}/>"}''',
                     soap: true
             ))
         and:
@@ -135,8 +135,8 @@ class MockServerIntegrationTest extends Specification {
                     name: 'testSoap',
                     path: '/testEndpoint',
                     port: 9999,
-                    predicate: '''{xml -> xml.name() == 'request2'}''',
-                    response: '''{xml -> "<goodResponseSoap2-${xml.name()}/>"}''',
+                    predicate: '''{req -> req.xml.name() == 'request2'}''',
+                    response: '''{req -> "<goodResponseSoap2-${req.xml.name()}/>"}''',
                     soap: true
             ))
     }
@@ -147,15 +147,15 @@ class MockServerIntegrationTest extends Specification {
                     name: 'testRest',
                     path: '/testEndpoint',
                     port: 9999,
-                    predicate: '''{xml -> xml.name() == 'request'}''',
-                    response: '''{xml -> "<goodResponseRest-${xml.name()}/>"}'''
+                    predicate: '''{req -> req.xml.name() == 'request'}''',
+                    response: '''{req -> "<goodResponseRest-${req.xml.name()}/>"}'''
             ))
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testSoap',
                     path: '/testEndpoint',
                     port: 9999,
-                    predicate: '''{xml -> xml.name() == 'request'}''',
-                    response: '''{xml -> "<goodResponseSoap-${xml.name()}/>"}''',
+                    predicate: '''{req -> req.soap.name() == 'request'}''',
+                    response: '''{req -> "<goodResponseSoap-${req.soap.name()}/>"}''',
                     soap: true
             ))
             HttpPost restPost = new HttpPost('http://localhost:9999/testEndpoint')
@@ -182,15 +182,15 @@ class MockServerIntegrationTest extends Specification {
                     name: 'testRest1',
                     path: '/test1',
                     port: 9999,
-                    predicate: '''{xml -> xml.name() == 'request1'}''',
-                    response: '''{xml -> "<goodResponseRest1/>"}'''
+                    predicate: '''{req -> req.xml.name() == 'request1'}''',
+                    response: '''{req -> "<goodResponseRest1/>"}'''
             ))
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest2',
                     path: secondPath,
                     port: secondPort,
-                    predicate: '''{xml -> xml.name() == 'request2'}''',
-                    response: '''{xml -> "<goodResponseRest2/>"}'''
+                    predicate: '''{req -> req.xml.name() == 'request2'}''',
+                    response: '''{req -> "<goodResponseRest2/>"}'''
             ))
             HttpPost firstRequest = new HttpPost('http://localhost:9999/test1')
             firstRequest.entity = new StringEntity('<request1/>', ContentType.create("text/xml", "UTF-8"))
@@ -243,8 +243,8 @@ class MockServerIntegrationTest extends Specification {
                     name: 'testRest1',
                     path: '/test1',
                     port: 9999,
-                    predicate: '''{xml -> xml.name() == 'request2'}''',
-                    response: '''{xml -> "<goodResponseRest2/>"}'''
+                    predicate: '''{req -> req.xml.name() == 'request2'}''',
+                    response: '''{req -> "<goodResponseRest2/>"}'''
             ))
             HttpPost request = new HttpPost('http://localhost:9999/test1')
             request.entity = new StringEntity('<request1/>', ContentType.create("text/xml", "UTF-8"))
@@ -262,8 +262,8 @@ class MockServerIntegrationTest extends Specification {
                     name: 'testSoap',
                     path: '/testEndpoint2',
                     port: -1,
-                    predicate: '''{xml -> true}''',
-                    response: '''{xml -> "<goodResponseSoap-${xml.name()}/>"}''',
+                    predicate: '''{_ -> true}''',
+                    response: '''{req -> "<goodResponseSoap-${req.xml.name()}/>"}''',
                     soap: true
             ))
         then:
@@ -276,13 +276,13 @@ class MockServerIntegrationTest extends Specification {
                     name: 'testRest',
                     path: '/testEndpoint',
                     port: 9999,
-                    response: '''{xml -> "<defaultResponse/>"}'''
+                    response: '''{_ -> "<defaultResponse/>"}'''
             ))
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest2',
                     path: '/testEndpoint',
                     port: 9999,
-                    response: '''{xml -> "<getResponse/>"}''',
+                    response: '''{_ -> "<getResponse/>"}''',
                     method: AddMockRequestData.Method.GET
             ))
             HttpGet restGet = new HttpGet('http://localhost:9999/testEndpoint')
@@ -299,13 +299,13 @@ class MockServerIntegrationTest extends Specification {
                     name: 'testRest',
                     path: '/testEndpoint',
                     port: 9999,
-                    response: '''{xml -> "<defaultResponse/>"}'''
+                    response: '''{_ -> "<defaultResponse/>"}'''
             ))
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest2',
                     path: '/testEndpoint',
                     port: 9999,
-                    response: '''{xml -> "<traceResponse/>"}''',
+                    response: '''{_ -> "<traceResponse/>"}''',
                     method: AddMockRequestData.Method.TRACE
             ))
             HttpTrace restTrace = new HttpTrace('http://localhost:9999/testEndpoint')
@@ -322,7 +322,7 @@ class MockServerIntegrationTest extends Specification {
                     name: 'testRest',
                     path: '/testEndpoint',
                     port: 9999,
-                    response: '''{xml -> "<defaultResponse/>"}'''
+                    response: '''{_ -> "<defaultResponse/>"}'''
             ))
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest2',
@@ -344,7 +344,7 @@ class MockServerIntegrationTest extends Specification {
                     name: 'testRest',
                     path: '/testEndpoint',
                     port: 9999,
-                    response: '''{xml -> "<defaultResponse/>"}'''
+                    response: '''{_ -> "<defaultResponse/>"}'''
             ))
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest2',
@@ -366,14 +366,14 @@ class MockServerIntegrationTest extends Specification {
                     name: 'testRest',
                     path: '/test1',
                     port: 9999,
-                    response: '''{xml -> "<defaultResponse/>"}'''
+                    response: '''{_ -> "<defaultResponse/>"}'''
             ))
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest2',
                     path: '/test1',
                     port: 9999,
-                    predicate: '''{xml -> xml.name() == 'request1'}''',
-                    response: '''{xml -> "<goodResponseRest1/>"}''',
+                    predicate: '''{req -> req.xml.name() == 'request1'}''',
+                    response: '''{_ -> "<goodResponseRest1/>"}''',
                     method: AddMockRequestData.Method.PUT
             ))
             HttpPut request = new HttpPut('http://localhost:9999/test1')
@@ -391,13 +391,13 @@ class MockServerIntegrationTest extends Specification {
                     name: 'testRest',
                     path: '/test1',
                     port: 9999,
-                    response: '''{xml -> "<defaultResponse/>"}'''
+                    response: '''{_ -> "<defaultResponse/>"}'''
             ))
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest2',
                     path: '/test1',
                     port: 9999,
-                    response: '''{xml -> "<goodResponseRest1/>"}''',
+                    response: '''{_ -> "<goodResponseRest1/>"}''',
                     method: AddMockRequestData.Method.DELETE
             ))
             HttpDelete request = new HttpDelete('http://localhost:9999/test1')
@@ -414,14 +414,14 @@ class MockServerIntegrationTest extends Specification {
                     name: 'testRest',
                     path: '/test1',
                     port: 9999,
-                    response: '''{xml -> "<defaultResponse/>"}'''
+                    response: '''{_ -> "<defaultResponse/>"}'''
             ))
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testRest2',
                     path: '/test1',
                     port: 9999,
-                    predicate: '''{xml -> xml.name() == 'request1'}''',
-                    response: '''{xml -> "<goodResponseRest1/>"}''',
+                    predicate: '''{req -> req.xml.name() == 'request1'}''',
+                    response: '''{_ -> "<goodResponseRest1/>"}''',
                     method: AddMockRequestData.Method.PATCH
             ))
             HttpPatch request = new HttpPatch('http://localhost:9999/test1')
@@ -439,9 +439,9 @@ class MockServerIntegrationTest extends Specification {
                     name: 'testRest',
                     path: '/testEndpoint',
                     port: 9999,
-                    predicate: '''{xml -> xml.name() == 'request'}''',
-                    response: '''{xml -> "<goodResponse/>"}''',
-                    responseHeaders: '''{ xml -> ['Input-Name':"${xml.name()}"]}'''
+                    predicate: '''{req -> req.xml.name() == 'request'}''',
+                    response: '''{_ -> "<goodResponse/>"}''',
+                    responseHeaders: '''{ req -> ['Input-Name':"${req.xml.name()}"]}'''
             ))
             HttpPost restPost = new HttpPost('http://localhost:9999/testEndpoint')
             restPost.entity = new StringEntity('<request/>', ContentType.create("text/xml", "UTF-8"))
@@ -459,9 +459,9 @@ class MockServerIntegrationTest extends Specification {
                     name: 'testRest',
                     path: '/testEndpoint',
                     port: 9999,
-                    response: '''{xml -> "<goodResponse/>"}''',
-                    requestHeaders: '''{ hs -> hs['user-agent']?.startsWith('Mozilla') &&
-                                            hs.pragma == 'no-cache'}'''
+                    predicate: '''{ req -> req.headers['user-agent']?.startsWith('Mozilla') &&
+                                            req.headers.pragma == 'no-cache'}''',
+                    response: '''{_ -> "<goodResponse/>"}'''
             ))
             HttpPost restPost = new HttpPost('http://localhost:9999/testEndpoint')
             restPost.entity = new StringEntity('<request/>', ContentType.create("text/xml", "UTF-8"))
@@ -488,9 +488,9 @@ class MockServerIntegrationTest extends Specification {
                     name: 'testRest',
                     path: '/testEndpoint',
                     port: 9999,
-                    response: '''{xml -> "<goodResponse/>"}''',
-                    queryParams: '''{ qp -> qp['q'] == '15' &&
-                                            qp.id == '1'}'''
+                    predicate: '''{ req -> req.query['q'] == '15' &&
+                                            req.query.id == '1'}''',
+                    response: '''{_ -> "<goodResponse/>"}'''
             ))
             HttpPost restPost = new HttpPost('http://localhost:9999/testEndpoint?q=15&id=1')
             HttpPost badRestPost = new HttpPost('http://localhost:9999/testEndpoint?q=15&id=2')
@@ -506,12 +506,57 @@ class MockServerIntegrationTest extends Specification {
             restPostResponse.name() == 'goodResponse'
     }
 
-    //TODO    def "should dispatch rest mock with post method and parameters"(){}
-    //TODO    def "should dispatch rest mock with post method, response headers and request headers"(){}
+    def "should add mock that accepts only when request has specific body"() {
+        given:
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest',
+                    path: '/testEndpoint',
+                    port: 9999,
+                    predicate: '''{req -> req.text == 'hello=world&id=3'}''',
+                    response: '''{_ -> "<goodResponse/>"}'''
+            ))
+            HttpPost restPost = new HttpPost('http://localhost:9999/testEndpoint')
+            restPost.entity = new StringEntity('hello=world&id=3', ContentType.create("text/plain", "UTF-8"))
+            HttpPost badRestPost = new HttpPost('http://localhost:9999/testEndpoint')
+            badRestPost.entity = new StringEntity('hello=world&id=2', ContentType.create("text/plain", "UTF-8"))
+        when:
+            CloseableHttpResponse badResponse = client.execute(badRestPost)
+        then:
+            GPathResult badRestPostResponse = Util.extractXmlResponse(badResponse)
+            badRestPostResponse.name() == 'invalidInput'
+        when:
+            CloseableHttpResponse response = client.execute(restPost)
+        then:
+            GPathResult restPostResponse = Util.extractXmlResponse(response)
+            restPostResponse.name() == 'goodResponse'
+    }
+
+    def "should add mock which response json to json"() {
+        given:
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest',
+                    path: '/testEndpoint',
+                    port: 9999,
+                    predicate: '''{req -> req.json.id == 1 && req.json.ar == ["a", true]}''',
+                    response: '''{req -> """{"name":"goodResponse-${req.json.id}"}"""}'''
+            ))
+            HttpPost restPost = new HttpPost('http://localhost:9999/testEndpoint')
+            restPost.entity = new StringEntity('{"id":1, "ar":["a", true]}', ContentType.create("text/json", "UTF-8"))
+            HttpPost badRestPost = new HttpPost('http://localhost:9999/testEndpoint')
+            badRestPost.entity = new StringEntity('{"id":1, "ar":["a", false]}', ContentType.create("text/json", "UTF-8"))
+        when:
+            CloseableHttpResponse badResponse = client.execute(badRestPost)
+        then:
+            GPathResult badRestPostResponse = Util.extractXmlResponse(badResponse)
+            badRestPostResponse.name() == 'invalidInput'
+        when:
+            CloseableHttpResponse response = client.execute(restPost)
+        then:
+            Object restPostResponse = Util.extractJsonResponse(response)
+            restPostResponse.name == 'goodResponse-1'
+    }
 
     //TODO    def "should get mock report"(){}
     //TODO    def "should get list mocks"(){}
     //TODO    def "should validate mock when creating"
-
-    //TODO    def "should handle json input and output"(){}
 }

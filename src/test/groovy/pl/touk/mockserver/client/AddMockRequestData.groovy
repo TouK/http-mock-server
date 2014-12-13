@@ -1,7 +1,11 @@
 package pl.touk.mockserver.client
 
+import groovy.transform.CompileStatic
+import groovy.transform.TypeChecked
 import org.apache.commons.lang3.StringEscapeUtils
 
+@CompileStatic
+@TypeChecked
 class AddMockRequestData {
     String name
     String path
@@ -12,8 +16,6 @@ class AddMockRequestData {
     Integer statusCode
     Method method
     String responseHeaders
-    String requestHeaders
-    String queryParams
 
     void setPredicate(String predicate) {
         this.predicate = StringEscapeUtils.escapeXml11(predicate)
@@ -25,14 +27,6 @@ class AddMockRequestData {
 
     void setResponseHeaders(String responseHeaders) {
         this.responseHeaders = StringEscapeUtils.escapeXml11(responseHeaders)
-    }
-
-    void setRequestHeaders(String requestHeaders) {
-        this.requestHeaders = StringEscapeUtils.escapeXml11(requestHeaders)
-    }
-
-    void setQueryParams(String queryParams) {
-        this.queryParams = StringEscapeUtils.escapeXml11(queryParams)
     }
 
     enum Method {

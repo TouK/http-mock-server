@@ -1,5 +1,6 @@
 package pl.touk.mockserver.client
 
+import groovy.json.JsonSlurper
 import groovy.transform.PackageScope
 import groovy.util.slurpersupport.GPathResult
 import org.apache.http.HttpEntity
@@ -7,7 +8,6 @@ import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.util.EntityUtils
 
 class Util {
-    @PackageScope
     static GPathResult extractXmlResponse(CloseableHttpResponse response){
         HttpEntity entity = response.entity
         GPathResult xml = new XmlSlurper().parseText(EntityUtils.toString(entity))
@@ -22,4 +22,10 @@ class Util {
             </soap-env:Envelope>"""
     }
 
+    static Object extractJsonResponse(CloseableHttpResponse response) {
+        HttpEntity entity = response.entity
+        Object json = new JsonSlurper().parseText(EntityUtils.toString(entity))
+        EntityUtils.consumeQuietly(entity)
+        return json
+    }
 }
