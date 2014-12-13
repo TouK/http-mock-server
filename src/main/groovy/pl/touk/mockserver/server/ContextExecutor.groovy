@@ -69,6 +69,7 @@ class ContextExecutor {
         mocks << mock
     }
 
-    void stop(){
+    List<Mock> getMocks(){
+        return mocks
     }
 }

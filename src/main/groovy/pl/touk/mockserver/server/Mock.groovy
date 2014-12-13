@@ -5,7 +5,7 @@ import groovy.transform.PackageScope
 
 @PackageScope
 @EqualsAndHashCode(excludes = ["counter"])
-class Mock {
+class Mock implements Comparable<Mock>{
     final String name
     final String path
     final int port
@@ -80,5 +80,15 @@ class Mock {
         if (responseHeaders) {
             this.responseHeaders = Eval.me(responseHeaders) as Closure
         }
+    }
+
+    @Override
+    public String toString() {
+        return """<mock><port>$port</port><path>$path</path><name>$name</name></mock>"""
+    }
+
+    @Override
+    int compareTo(Mock o) {
+        return name.compareTo(o.name)
     }
 }

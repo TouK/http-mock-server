@@ -20,18 +20,36 @@ class HttpMockServer {
         httpServerWraper.createContext('/serverControl', {
             HttpExchange ex ->
                 try {
-                    GPathResult request = new XmlSlurper().parse(ex.requestBody)
-                    if (ex.requestMethod == 'POST' && request.name() == 'addMock') {
-                        addMock(request, ex)
-                    } else if (ex.requestMethod == 'POST' && request.name() == 'removeMock') {
-                        removeMock(request, ex)
+                    if (ex.requestMethod == 'GET') {
+                        listMocks(ex)
+                    } else if (ex.requestMethod == 'POST') {
+                        GPathResult request = new XmlSlurper().parse(ex.requestBody)
+                        if (request.name() == 'addMock') {
+                            addMock(request, ex)
+                        } else if (request.name() == 'removeMock') {
+                            removeMock(request, ex)
+                        } else {
+                            throw new RuntimeException('Unknown request')
+                        }
+                    } else {
+                        throw new RuntimeException('Unknown request')
                     }
                     //TODO add get mock report
-                    //TODO add list mock
                 } catch (Exception e) {
                     createErrorResponse(ex, e)
                 }
         })
+    }
+
+    void listMocks(HttpExchange ex) {
+        String response = '<mocks>' + listMocks().join('') + '</mocks>'
+        ex.sendResponseHeaders(200, 0)
+        ex.responseBody << response
+        ex.responseBody.close()
+    }
+
+    Set<Mock> listMocks() {
+        return childServers.collect { it.mocks }.flatten() as TreeSet
     }
 
     private void addMock(GPathResult request, HttpExchange ex) {

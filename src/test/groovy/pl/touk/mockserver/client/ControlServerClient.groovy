@@ -2,6 +2,7 @@ package pl.touk.mockserver.client
 
 import groovy.util.slurpersupport.GPathResult
 import org.apache.http.client.methods.CloseableHttpResponse
+import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
@@ -63,5 +64,15 @@ class ControlServerClient {
                 ${data.responseHeaders ? "<responseHeaders>${data.responseHeaders}</responseHeaders>" : ''}
             </addMock>
         """, ContentType.create("text/xml", "UTF-8"))
+    }
+
+    List<RegisteredMock> listMocks() {
+        HttpGet get = new HttpGet(address)
+        CloseableHttpResponse response = client.execute(get)
+        GPathResult xml = Util.extractXmlResponse(response)
+        if(xml.name() == 'mocks'){
+            return xml.mock.collect {new RegisteredMock(it.name.text(), it.path.text(), it.port.text() as int)}
+        }
+        return []
     }
 }

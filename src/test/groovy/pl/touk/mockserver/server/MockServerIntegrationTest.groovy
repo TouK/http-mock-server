@@ -222,10 +222,10 @@ class MockServerIntegrationTest extends Specification {
             secondXmlResponse.name() == 'goodResponseRest2'
         where:
             secondPort | secondPath | name
-            9999       | 'test1'   | 'the same port and path'
-            9998       | 'test1'   | 'the same path and another port'
-            9999       | 'test2'   | 'the same port and another path'
-            9998       | 'test2'   | 'another port and path'
+            9999       | 'test1'    | 'the same port and path'
+            9998       | 'test1'    | 'the same path and another port'
+            9999       | 'test2'    | 'the same port and another path'
+            9998       | 'test2'    | 'another port and path'
     }
 
     @Unroll
@@ -570,6 +570,48 @@ class MockServerIntegrationTest extends Specification {
             restPostResponse.name == 'goodResponse-1'
     }
 
+    def "should get list mocks"() {
+        given:
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest2',
+                    path: 'testEndpoint',
+                    port: 9998
+            ))
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest4',
+                    path: 'testEndpoint',
+                    port: 9999
+            ))
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest3',
+                    path: 'testEndpoint2',
+                    port: 9999
+            ))
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest5',
+                    path: 'testEndpoint',
+                    port: 9999
+            ))
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest6',
+                    path: 'testEndpoint2',
+                    port: 9999
+            ))
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest',
+                    path: 'testEndpoint',
+                    port: 9999
+            ))
+            controlServerClient.removeMock('testRest5')
+        expect:
+            controlServerClient.listMocks() == [
+                    new RegisteredMock('testRest', 'testEndpoint', 9999),
+                    new RegisteredMock('testRest2', 'testEndpoint', 9998),
+                    new RegisteredMock('testRest3', 'testEndpoint2', 9999),
+                    new RegisteredMock('testRest4', 'testEndpoint', 9999),
+                    new RegisteredMock('testRest6', 'testEndpoint2', 9999)
+            ]
+
+    }
     //TODO    def "should get mock report"(){}
-    //TODO    def "should get list mocks"(){}
 }
