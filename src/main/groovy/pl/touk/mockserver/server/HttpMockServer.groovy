@@ -1,7 +1,6 @@
 package pl.touk.mockserver.server
 
 import com.sun.net.httpserver.HttpExchange
-import groovy.transform.PackageScope
 import groovy.util.slurpersupport.GPathResult
 import groovy.xml.MarkupBuilder
 
@@ -10,7 +9,6 @@ import java.util.concurrent.CopyOnWriteArraySet
 
 import static pl.touk.mockserver.server.Util.createResponse
 
-@PackageScope
 class HttpMockServer {
 
     private final HttpServerWraper httpServerWraper
@@ -104,11 +102,43 @@ class HttpMockServer {
             throw new RuntimeException('mock not registered')
         }
         println "Removing $name"
-        int used = childServers.inject(0) { int res, HttpServerWraper server -> server.removeMock(name) + res }
+        List<MockEvent> mockEvents = childServers.collect { it.removeMock(name) }.flatten()
         mockNames.remove(name)
         StringWriter sw = new StringWriter()
         MarkupBuilder builder = new MarkupBuilder(sw)
-        builder.mockRemoved used
+        builder.mockRemoved {
+            mockEvents.each { MockEvent m ->
+                builder.mockEvent {
+                    builder.request {
+                        text m.request.text
+                        headers {
+                            m.request.headers.each {
+                                builder.param(name: it.key, it.value)
+                            }
+                        }
+                        query {
+                            m.request.query.each {
+                                builder.param(name: it.key, it.value)
+                            }
+                        }
+                        path {
+                            m.request.path.each {
+                                builder.elem it
+                            }
+                        }
+                    }
+                    builder.response {
+                        text m.response.text
+                        headers {
+                            m.response.headers.each {
+                                builder.param(name: it.key, it.value)
+                            }
+                        }
+                        statusCode m.response.statusCode
+                    }
+                }
+            }
+        }
         createResponse(ex, sw.toString(), 200)
     }
 

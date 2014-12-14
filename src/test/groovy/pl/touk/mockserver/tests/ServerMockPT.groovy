@@ -1,4 +1,4 @@
-package pl.touk.mockserver.server
+package pl.touk.mockserver.tests
 
 import groovy.util.slurpersupport.GPathResult
 import org.apache.http.client.HttpClient
@@ -10,6 +10,7 @@ import org.apache.http.impl.client.HttpClients
 import pl.touk.mockserver.client.AddMockRequestData
 import pl.touk.mockserver.client.ControlServerClient
 import pl.touk.mockserver.client.Util
+import pl.touk.mockserver.server.HttpMockServer
 import spock.lang.Specification
 
 class ServerMockPT extends Specification {
@@ -38,7 +39,7 @@ class ServerMockPT extends Specification {
                     restPost.entity = new StringEntity("<request$current/>", ContentType.create("text/xml", "UTF-8"))
                     CloseableHttpResponse response = client.execute(restPost)
                     responses[current] = Util.extractXmlResponse(response)
-                    assert controlServerClient.removeMock("testRest$current") == 1
+                    assert controlServerClient.removeMock("testRest$current").size() == 1
                 })
             }
         when:

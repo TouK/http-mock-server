@@ -49,13 +49,13 @@ class ContextExecutor {
         Util.createResponse(httpExchange, response.text, response.statusCode)
     }
 
-    int removeMock(String name) {
+    List<MockEvent> removeMock(String name) {
         Mock mock = mocks.find { it.name == name }
         if (mock) {
             mocks.remove(mock)
-            return mock.counter
+            return mock.history
         }
-        return 0
+        return []
     }
 
     void addMock(Mock mock) {

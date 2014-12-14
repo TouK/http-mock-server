@@ -42,11 +42,11 @@ class HttpServerWraper {
         httpServer.stop(0)
     }
 
-    int removeMock(String name) {
-        return executors.inject(0) { int res, ContextExecutor e -> e.removeMock(name) + res }
+    List<MockEvent> removeMock(String name) {
+        return executors.collect { it.removeMock(name) }.flatten()
     }
 
-    List<Mock> getMocks(){
-        return executors.collect {it.mocks}.flatten()
+    List<Mock> getMocks() {
+        return executors.collect { it.mocks }.flatten()
     }
 }

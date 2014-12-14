@@ -1,4 +1,4 @@
-package pl.touk.mockserver.server
+package pl.touk.mockserver.tests
 
 import groovy.util.slurpersupport.GPathResult
 import org.apache.http.client.methods.*
@@ -8,10 +8,10 @@ import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
 import pl.touk.mockserver.client.*
+import pl.touk.mockserver.server.HttpMockServer
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Unroll
-import pl.touk.mockserver.client.Util
 
 class MockServerIntegrationTest extends Specification {
 
@@ -49,7 +49,7 @@ class MockServerIntegrationTest extends Specification {
             GPathResult restPostResponse = Util.extractXmlResponse(response)
             restPostResponse.name() == 'goodResponseRest-request'
         expect:
-            controlServerClient.removeMock('testRest') == 1
+            controlServerClient.removeMock('testRest')?.size() == 1
     }
 
     def "should add soap mock on endpoint"() {
@@ -71,10 +71,10 @@ class MockServerIntegrationTest extends Specification {
             soapPostResponse.name() == 'Envelope'
             soapPostResponse.Body.'goodResponseSoap-request'.size() == 1
         expect:
-            controlServerClient.removeMock('testSoap') == 1
+            controlServerClient.removeMock('testSoap')?.size() == 1
     }
 
-    def "should not remove mock when it does not exist"() {
+    def "should throw exception when try to remove mock when it does not exist"() {
         when:
             controlServerClient.removeMock('testSoap')
         then:
@@ -89,7 +89,7 @@ class MockServerIntegrationTest extends Specification {
                     soap: true
             ))
         and:
-            controlServerClient.removeMock('testSoap') == 0
+            controlServerClient.removeMock('testSoap') == []
         when:
             controlServerClient.removeMock('testSoap')
         then:
@@ -144,7 +144,7 @@ class MockServerIntegrationTest extends Specification {
                     soap: true
             ))
         and:
-            controlServerClient.removeMock('testSoap') == 0
+            controlServerClient.removeMock('testSoap') == []
         and:
             controlServerClient.addMock(new AddMockRequestData(
                     name: 'testSoap',
@@ -637,5 +637,78 @@ class MockServerIntegrationTest extends Specification {
             restPostResponse.name == 'goodResponse-15'
     }
 
-    //TODO    def "should get mock report"(){}
+    def "should get mock report when deleting mock"() {
+        expect:
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest',
+                    path: 'testEndpoint',
+                    port: 9999,
+                    predicate: '''{req -> req.xml.name()[0..6] == 'request' }''',
+                    response: '''{req -> "<goodResponseRest-${req.xml.name()}/>"}''',
+                    statusCode: 201,
+                    responseHeaders: '''{req -> ['aaa':'14']}''',
+                    soap: false
+            ))
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest2',
+                    path: 'testEndpoint',
+                    port: 9999,
+                    predicate: '''{req -> req.xml.name() == 'reqXYZ' }''',
+                    response: '''{req -> "<goodResponseRest/>"}''',
+                    statusCode: 202,
+                    responseHeaders: '''{req -> ['aaa':'15']}''',
+                    soap: false
+            ))
+        when:
+            HttpPost post1 = new HttpPost('http://localhost:9999/testEndpoint')
+            post1.entity = new StringEntity('<request/>', ContentType.create("text/xml", "UTF-8"))
+            CloseableHttpResponse response1 = client.execute(post1)
+        then:
+            GPathResult restPostResponse1 = Util.extractXmlResponse(response1)
+            restPostResponse1.name() == 'goodResponseRest-request'
+        when:
+            HttpPost post2 = new HttpPost('http://localhost:9999/testEndpoint/hello')
+            post2.entity = new StringEntity('<request15/>', ContentType.create("text/xml", "UTF-8"))
+            CloseableHttpResponse response2 = client.execute(post2)
+        then:
+            GPathResult restPostResponse2 = Util.extractXmlResponse(response2)
+            restPostResponse2.name() == 'goodResponseRest-request15'
+        when:
+            HttpPost post3 = new HttpPost('http://localhost:9999/testEndpoint?id=123')
+            post3.entity = new StringEntity('<reqXYZ/>', ContentType.create("text/xml", "UTF-8"))
+            CloseableHttpResponse response3 = client.execute(post3)
+        then:
+            GPathResult restPostResponse3 = Util.extractXmlResponse(response3)
+            restPostResponse3.name() == 'goodResponseRest'
+        when:
+            List<MockEvent> mockHistories1 = controlServerClient.removeMock('testRest')
+        then:
+            mockHistories1.size() == 2
+            mockHistories1[0].request.text == '<request/>'
+            !mockHistories1[0].request.headers?.keySet()?.empty
+            mockHistories1[0].request.query == [:]
+            mockHistories1[0].request.path == ['testEndpoint']
+            !mockHistories1[0].response.headers?.keySet()?.empty
+            mockHistories1[0].response.text == '<goodResponseRest-request/>'
+            mockHistories1[0].response.statusCode == 201
+
+            mockHistories1[1].request.text == '<request15/>'
+            !mockHistories1[1].request.headers?.keySet()?.empty
+            mockHistories1[1].request.query == [:]
+            mockHistories1[1].request.path == ['testEndpoint', 'hello']
+            !mockHistories1[1].response.headers?.keySet()?.empty
+            mockHistories1[1].response.text == '<goodResponseRest-request15/>'
+            mockHistories1[1].response.statusCode == 201
+        when:
+            List<MockEvent> mockHistories2 = controlServerClient.removeMock('testRest2')
+        then:
+            mockHistories2.size() == 1
+            mockHistories2[0].request.text == '<reqXYZ/>'
+            !mockHistories2[0].request.headers?.keySet()?.empty
+            mockHistories2[0].request.query == [id: '123']
+            mockHistories2[0].request.path == ['testEndpoint']
+            mockHistories2[0].response.headers.aaa == '15'
+            mockHistories2[0].response.text == '<goodResponseRest/>'
+            mockHistories2[0].response.statusCode == 202
+    }
 }

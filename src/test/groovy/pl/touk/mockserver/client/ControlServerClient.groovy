@@ -31,15 +31,30 @@ class ControlServerClient {
         }
     }
 
-    int removeMock(String name) {
+    List<MockEvent> removeMock(String name) {
         HttpPost removeMockPost = new HttpPost(address)
         removeMockPost.entity = buildRemoveMockRequest(new RemoveMockRequestData(name: name))
         CloseableHttpResponse response = client.execute(removeMockPost)
         GPathResult responseXml = Util.extractXmlResponse(response)
         if (responseXml.name() == 'mockRemoved') {
-            return responseXml.text() as int
+            return responseXml.'mockEvent'.collect {
+                new MockEvent(mockRequestFromXml(it.request), mockResponseFromXml(it.response))
+            }
         }
         throw new MockDoesNotExist()
+    }
+
+    private static MockResponse mockResponseFromXml(GPathResult xml) {
+        return new MockResponse(xml.statusCode.text() as int, xml.text.text(), xml.headers.param.collectEntries { [(it.@name.text()):it.text()] })
+    }
+
+    private static MockRequest mockRequestFromXml(GPathResult xml) {
+        return new MockRequest(
+                xml.text.text(),
+                xml.headers.param.collectEntries { [(it.@name.text()):it.text()] },
+                xml.query.param.collectEntries { [(it.@name.text()):it.text()] },
+                xml.path.elem*.text()
+        )
     }
 
     private static StringEntity buildRemoveMockRequest(RemoveMockRequestData data) {
@@ -70,8 +85,8 @@ class ControlServerClient {
         HttpGet get = new HttpGet(address)
         CloseableHttpResponse response = client.execute(get)
         GPathResult xml = Util.extractXmlResponse(response)
-        if(xml.name() == 'mocks'){
-            return xml.mock.collect {new RegisteredMock(it.name.text(), it.path.text(), it.port.text() as int)}
+        if (xml.name() == 'mocks') {
+            return xml.mock.collect { new RegisteredMock(it.name.text(), it.path.text(), it.port.text() as int) }
         }
         return []
     }

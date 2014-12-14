@@ -3,6 +3,8 @@ package pl.touk.mockserver.server
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.PackageScope
 
+import java.util.concurrent.CopyOnWriteArrayList
+
 @PackageScope
 @EqualsAndHashCode(excludes = ["counter"])
 class Mock implements Comparable<Mock> {
@@ -16,6 +18,7 @@ class Mock implements Comparable<Mock> {
     int statusCode = 200
     String method = 'POST'
     int counter = 0
+    final List<MockEvent> history = new CopyOnWriteArrayList<>()
 
     Mock(String name, String path, int port) {
         if (!(name)) {
@@ -36,7 +39,9 @@ class Mock implements Comparable<Mock> {
         String responseText = response(request)
         String response = soap ? wrapSoap(responseText) : responseText
         Map<String, String> headers = responseHeaders(request)
-        return new MockResponse(statusCode, response, headers)
+        MockResponse mockResponse = new MockResponse(statusCode, response, headers)
+        history << new MockEvent(request, mockResponse)
+        return mockResponse
     }
 
     private static String wrapSoap(String request) {
