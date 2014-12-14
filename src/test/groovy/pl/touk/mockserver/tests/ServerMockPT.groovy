@@ -46,7 +46,7 @@ class ServerMockPT extends Specification {
             threads*.start()
             Thread.sleep(60000)
         then:
-            responses.eachWithIndex { res, i -> println "Checking $i"; assert res.name() == "goodResponse$i" }
+            responses.eachWithIndex { res, i -> assert res.name() == "goodResponse$i" }
         cleanup:
             httpMockServer.stop()
     }

@@ -3,9 +3,11 @@ package pl.touk.mockserver.server
 import com.sun.net.httpserver.HttpHandler
 import com.sun.net.httpserver.HttpServer
 import groovy.transform.PackageScope
+import groovy.util.logging.Slf4j
 
 import java.util.concurrent.Executors
 
+@Slf4j
 @PackageScope
 class HttpServerWraper {
     private final HttpServer httpServer
@@ -18,9 +20,9 @@ class HttpServerWraper {
         InetSocketAddress addr = new InetSocketAddress(Inet4Address.getByName("0.0.0.0"), port)
         httpServer = HttpServer.create(addr, 0)
         httpServer.executor = Executors.newCachedThreadPool()
-        println("Http server statrting on port $port...")
+        log.info("Http server statrting on port $port...")
         httpServer.start()
-        println('Http server is started')
+        log.info('Http server is started')
     }
 
     void createContext(String context, HttpHandler handler) {
@@ -34,7 +36,7 @@ class HttpServerWraper {
         } else {
             executors << new ContextExecutor(this, mock)
         }
-        println "Added mock ${mock.name}"
+        log.info("Added mock ${mock.name}")
     }
 
     void stop() {

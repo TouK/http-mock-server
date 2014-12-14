@@ -2,9 +2,11 @@ package pl.touk.mockserver.server
 
 import com.sun.net.httpserver.HttpExchange
 import groovy.transform.PackageScope
+import groovy.util.logging.Slf4j
 
 import java.util.concurrent.CopyOnWriteArrayList
 
+@Slf4j
 @PackageScope
 class ContextExecutor {
     private final HttpServerWraper httpServerWraper
@@ -18,7 +20,7 @@ class ContextExecutor {
         httpServerWraper.createContext(path, {
             HttpExchange ex ->
                 MockRequest request = new MockRequest(ex.requestBody.text, ex.requestHeaders, ex.requestURI)
-                println "Mock received input"
+                log.info("Mock received input")
                 for (Mock mock : mocks) {
                     try {
                         if (mock.match(ex.requestMethod, request)) {

@@ -2,11 +2,13 @@ package pl.touk.mockserver.server
 
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.PackageScope
+import groovy.util.logging.Slf4j
 
 import java.util.concurrent.CopyOnWriteArrayList
 
 @PackageScope
 @EqualsAndHashCode(excludes = ["counter"])
+@Slf4j
 class Mock implements Comparable<Mock> {
     final String name
     final String path
@@ -34,7 +36,7 @@ class Mock implements Comparable<Mock> {
     }
 
     MockResponse apply(MockRequest request) {
-        println "Mock $name invoked"
+        log.debug("Mock $name invoked")
         ++counter
         String responseText = response(request)
         String response = soap ? wrapSoap(responseText) : responseText

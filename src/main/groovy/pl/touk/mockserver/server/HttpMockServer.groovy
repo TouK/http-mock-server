@@ -1,6 +1,7 @@
 package pl.touk.mockserver.server
 
 import com.sun.net.httpserver.HttpExchange
+import groovy.util.logging.Slf4j
 import groovy.util.slurpersupport.GPathResult
 import groovy.xml.MarkupBuilder
 
@@ -9,6 +10,7 @@ import java.util.concurrent.CopyOnWriteArraySet
 
 import static pl.touk.mockserver.server.Util.createResponse
 
+@Slf4j
 class HttpMockServer {
 
     private final HttpServerWraper httpServerWraper
@@ -101,7 +103,7 @@ class HttpMockServer {
         if (!(name in mockNames)) {
             throw new RuntimeException('mock not registered')
         }
-        println "Removing $name"
+        log.info("Removing mock $name")
         List<MockEvent> mockEvents = childServers.collect { it.removeMock(name) }.flatten()
         mockNames.remove(name)
         StringWriter sw = new StringWriter()

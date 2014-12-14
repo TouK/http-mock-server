@@ -18,6 +18,8 @@
         <httpclient.version>4.3.5</httpclient.version>
         <spock-core.version>1.0-groovy-2.0-SNAPSHOT</spock-core.version>
         <commons-lang3.version>3.3.2</commons-lang3.version>
+        <slf4j-api.version>1.7.7</slf4j-api.version>
+        <logback-classic.version>1.0.13</logback-classic.version>
     </properties>
 
     <dependencies>
@@ -42,6 +44,16 @@
             <artifactId>commons-lang3</artifactId>
             <version>${commons-lang3.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j-api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback-classic.version}</version>
         </dependency>
     </dependencies>
 
