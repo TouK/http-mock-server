@@ -106,6 +106,10 @@ class HttpMockServer {
         log.info("Removing mock $name")
         List<MockEvent> mockEvents = childServers.collect { it.removeMock(name) }.flatten()
         mockNames.remove(name)
+        createResponse(ex, createMockRemovedResponse(mockEvents), 200)
+    }
+
+    private static String createMockRemovedResponse(List<MockEvent> mockEvents) {
         StringWriter sw = new StringWriter()
         MarkupBuilder builder = new MarkupBuilder(sw)
         builder.mockRemoved {
@@ -141,7 +145,8 @@ class HttpMockServer {
                 }
             }
         }
-        createResponse(ex, sw.toString(), 200)
+        String string = sw.toString()
+        return string
     }
 
     private static void createErrorResponse(HttpExchange ex, Exception e) {

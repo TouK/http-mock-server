@@ -681,34 +681,34 @@ class MockServerIntegrationTest extends Specification {
             GPathResult restPostResponse3 = Util.extractXmlResponse(response3)
             restPostResponse3.name() == 'goodResponseRest'
         when:
-            List<MockEvent> mockHistories1 = controlServerClient.removeMock('testRest')
+            List<MockEvent> mockEvents1 = controlServerClient.removeMock('testRest')
         then:
-            mockHistories1.size() == 2
-            mockHistories1[0].request.text == '<request/>'
-            !mockHistories1[0].request.headers?.keySet()?.empty
-            mockHistories1[0].request.query == [:]
-            mockHistories1[0].request.path == ['testEndpoint']
-            !mockHistories1[0].response.headers?.keySet()?.empty
-            mockHistories1[0].response.text == '<goodResponseRest-request/>'
-            mockHistories1[0].response.statusCode == 201
+            mockEvents1.size() == 2
+            mockEvents1[0].request.text == '<request/>'
+            !mockEvents1[0].request.headers?.keySet()?.empty
+            mockEvents1[0].request.query == [:]
+            mockEvents1[0].request.path == ['testEndpoint']
+            !mockEvents1[0].response.headers?.keySet()?.empty
+            mockEvents1[0].response.text == '<goodResponseRest-request/>'
+            mockEvents1[0].response.statusCode == 201
 
-            mockHistories1[1].request.text == '<request15/>'
-            !mockHistories1[1].request.headers?.keySet()?.empty
-            mockHistories1[1].request.query == [:]
-            mockHistories1[1].request.path == ['testEndpoint', 'hello']
-            !mockHistories1[1].response.headers?.keySet()?.empty
-            mockHistories1[1].response.text == '<goodResponseRest-request15/>'
-            mockHistories1[1].response.statusCode == 201
+            mockEvents1[1].request.text == '<request15/>'
+            !mockEvents1[1].request.headers?.keySet()?.empty
+            mockEvents1[1].request.query == [:]
+            mockEvents1[1].request.path == ['testEndpoint', 'hello']
+            !mockEvents1[1].response.headers?.keySet()?.empty
+            mockEvents1[1].response.text == '<goodResponseRest-request15/>'
+            mockEvents1[1].response.statusCode == 201
         when:
-            List<MockEvent> mockHistories2 = controlServerClient.removeMock('testRest2')
+            List<MockEvent> mockEvents2 = controlServerClient.removeMock('testRest2')
         then:
-            mockHistories2.size() == 1
-            mockHistories2[0].request.text == '<reqXYZ/>'
-            !mockHistories2[0].request.headers?.keySet()?.empty
-            mockHistories2[0].request.query == [id: '123']
-            mockHistories2[0].request.path == ['testEndpoint']
-            mockHistories2[0].response.headers.aaa == '15'
-            mockHistories2[0].response.text == '<goodResponseRest/>'
-            mockHistories2[0].response.statusCode == 202
+            mockEvents2.size() == 1
+            mockEvents2[0].request.text == '<reqXYZ/>'
+            !mockEvents2[0].request.headers?.keySet()?.empty
+            mockEvents2[0].request.query == [id: '123']
+            mockEvents2[0].request.path == ['testEndpoint']
+            mockEvents2[0].response.headers.aaa == '15'
+            mockEvents2[0].response.text == '<goodResponseRest/>'
+            mockEvents2[0].response.statusCode == 202
     }
 }
