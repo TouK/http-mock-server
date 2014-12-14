@@ -13,14 +13,16 @@ class MockRequest {
     final GPathResult xml
     final GPathResult soap
     final Object json
+    final List<String> path
 
-    MockRequest(String text, Headers headers, String query) {
+    MockRequest(String text, Headers headers, URI uri) {
         this.text = text
         this.headers = headersToMap(headers)
-        this.query = queryParamsToMap(query)
+        this.query = queryParamsToMap(uri.query)
         this.xml = inputToXml(text)
         this.soap = inputToSoap(xml)
         this.json = inputToJson(text)
+        this.path = uri.path.split('/').findAll()
     }
 
     private static GPathResult inputToXml(String text) {

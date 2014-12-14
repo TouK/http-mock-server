@@ -612,7 +612,30 @@ class MockServerIntegrationTest extends Specification {
                     new RegisteredMock('testRest4', 'testEndpoint', 9999),
                     new RegisteredMock('testRest6', 'testEndpoint2', 9999)
             ]
-
     }
+
+    def "should add mock accepts path certain path params"() {
+        given:
+            controlServerClient.addMock(new AddMockRequestData(
+                    name: 'testRest',
+                    path: 'testEndpoint',
+                    port: 9999,
+                    predicate: '''{req -> req.path[1] == '15' && req.path[2] == 'comments'}''',
+                    response: '''{req -> """{"name":"goodResponse-${req.path[1]}"}"""}'''
+            ))
+            HttpPost restPost = new HttpPost('http://localhost:9999/testEndpoint/15/comments')
+            HttpPost badRestPost = new HttpPost('http://localhost:9999/testEndpoint/test/comments')
+        when:
+            CloseableHttpResponse badResponse = client.execute(badRestPost)
+        then:
+            badResponse.statusLine.statusCode == 404
+            Util.consumeResponse(badResponse)
+        when:
+            CloseableHttpResponse response = client.execute(restPost)
+        then:
+            Object restPostResponse = Util.extractJsonResponse(response)
+            restPostResponse.name == 'goodResponse-15'
+    }
+
     //TODO    def "should get mock report"(){}
 }
