@@ -13,7 +13,6 @@ import org.apache.http.util.EntityUtils
 class Util {
     static GPathResult extractXmlResponse(CloseableHttpResponse response) {
         HttpEntity entity = response.entity
-
         GPathResult xml = new XmlSlurper().parseText(EntityUtils.toString(entity))
         EntityUtils.consumeQuietly(entity)
         return xml

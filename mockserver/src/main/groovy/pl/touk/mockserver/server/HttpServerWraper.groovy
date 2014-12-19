@@ -20,7 +20,7 @@ class HttpServerWraper {
         InetSocketAddress addr = new InetSocketAddress(Inet4Address.getByName("0.0.0.0"), port)
         httpServer = HttpServer.create(addr, 0)
         httpServer.executor = Executors.newCachedThreadPool()
-        log.info("Http server statrting on port $port...")
+        log.info("Http server starting on port $port...")
         httpServer.start()
         log.info('Http server is started')
     }
