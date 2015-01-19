@@ -11,7 +11,7 @@
     <modules>
         <module>mockserver-client</module>
         <module>mockserver</module>
-        <module>mockserver-tests</module>
+        <!--<module>mockserver-tests</module>-->
     </modules>
 
     <properties>
@@ -27,6 +27,12 @@
         <slf4j-api.version>1.7.7</slf4j-api.version>
         <logback-classic.version>1.0.13</logback-classic.version>
     </properties>
+
+    <scm>
+        <connection>scm:git:ssh://gerrit.touk.pl:29418/integracja/http-mock-server</connection>
+        <developerConnection>scm:git:ssh://gerrit.touk.pl:29418/integracja/http-mock-server</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
 
     <dependencyManagement>
         <dependencies>
@@ -99,6 +105,43 @@
             <id>sonatype-snapshots</id>
             <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
         </repository>
+
+        <repository>
+            <id>central.releases</id>
+            <name>TouK Virtual Repository</name>
+            <url>http://nexus.touk.pl/nexus/content/groups/public/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+
+        <repository>
+            <id>central.snapshots</id>
+            <name>TouK Virtual Repository</name>
+            <url>http://nexus.touk.pl/nexus/content/groups/public-snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
     </repositories>
+
+    <distributionManagement>
+        <repository>
+            <id>touk.nexus.release</id>
+            <name>TouK Virtual Repository</name>
+            <url>http://nexus.touk.pl/nexus/content/repositories/releases</url>
+        </repository>
+        <snapshotRepository>
+            <id>touk.nexus.snapshots</id>
+            <name>TouK Virtual Repository</name>
+            <url>http://nexus.touk.pl/nexus/content/repositories/snapshots</url>
+        </snapshotRepository>
+    </distributionManagement>
 
 </project>
