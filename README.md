@@ -1,6 +1,6 @@
 # HTTP MOCK SERVER
 
-## Create server jar
+## Create server jar (in mockserver directory)
 
 ```
 mvn clean package assembly:single
