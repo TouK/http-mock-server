@@ -68,7 +68,61 @@ Response with error message if failure:
 <exceptionOccured>...</exceptionOccured>
 ```
 
-## When mock was used it could be unregistered by name. It returns report of mock invocations.
+## Mock could be peeked to get get report of its invocations.
+Via client:
+
+```
+List<MockEvent> mockEvents = controlServerClient.peekMock('...')
+```
+
+Via sending POST request to localhost:<PORT>/serverControl
+
+```
+<peekMock>
+    <name>...</name>
+</peekMock>
+```
+
+Response if success:
+
+```
+<mockPeeked>
+  <mockEvent>
+    <request>
+      <text>...</text>
+      <headers>
+        <param name='...'>...</param>
+        ...
+      </headers>
+      <query>
+        <param name='...'>...</param>
+        ...
+      </query>
+      <path>
+        <elem>...</elem>
+        ...
+      </path>
+    </request>
+    <response>
+      <text>...</text>
+      <headers>
+        <param name='...'>...</param>
+        ...
+      </headers>
+      <statusCode>...</statusCode>
+    </response>
+  </mockEvent>
+  ...
+</mockPeeked>
+```
+
+Response with error message if failure:
+
+```
+<exceptionOccured>...</exceptionOccured>
+```
+
+## When mock was used it could be unregistered by name. It also returns report of mock invocations.
 Via client:
 
 ```
@@ -116,11 +170,12 @@ Response if success:
 </mockRemoved>
 ```
 
-Responsewith error message if failure:
+Response with error message if failure:
 
 ```
 <exceptionOccured>...</exceptionOccured>
 ```
+
 
 ## List of current registered mocks could be retrieved:
 Via client:

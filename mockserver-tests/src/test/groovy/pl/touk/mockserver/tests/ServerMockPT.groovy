@@ -8,7 +8,7 @@ import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.HttpClients
 import pl.touk.mockserver.client.AddMockRequestData
-import pl.touk.mockserver.client.ControlServerClient
+import pl.touk.mockserver.client.RemoteMockServer
 import pl.touk.mockserver.client.Util
 import pl.touk.mockserver.server.HttpMockServer
 import spock.lang.Specification
@@ -18,7 +18,7 @@ class ServerMockPT extends Specification {
     def "should handle many request simultaneously"() {
         given:
             HttpMockServer httpMockServer = new HttpMockServer()
-            ControlServerClient controlServerClient = new ControlServerClient("localhost", 9999)
+            RemoteMockServer controlServerClient = new RemoteMockServer("localhost", 9999)
             HttpClient client = HttpClients.createDefault()
             int requestAmount = 1000
             GPathResult[] responses = new GPathResult[requestAmount]

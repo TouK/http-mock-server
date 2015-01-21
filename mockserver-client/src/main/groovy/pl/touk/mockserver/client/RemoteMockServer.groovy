@@ -9,11 +9,11 @@ import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
 
-class ControlServerClient {
+class RemoteMockServer {
     private final String address
     private final CloseableHttpClient client = HttpClients.createDefault()
 
-    ControlServerClient(String host, int port) {
+    RemoteMockServer(String host, int port) {
         address = "http://$host:$port/serverControl"
     }
 
@@ -44,6 +44,19 @@ class ControlServerClient {
         throw new MockDoesNotExist()
     }
 
+    List<MockEvent> peekMock(String name) {
+        HttpPost removeMockPost = new HttpPost(address)
+        removeMockPost.entity = buildPeekMockRequest(new PeekMockRequestData(name: name))
+        CloseableHttpResponse response = client.execute(removeMockPost)
+        GPathResult responseXml = Util.extractXmlResponse(response)
+        if (responseXml.name() == 'mockPeeked') {
+            return responseXml.'mockEvent'.collect {
+                new MockEvent(mockRequestFromXml(it.request), mockResponseFromXml(it.response))
+            }
+        }
+        throw new MockDoesNotExist()
+    }
+
     private static MockResponse mockResponseFromXml(GPathResult xml) {
         return new MockResponse(xml.statusCode.text() as int, xml.text.text(), xml.headers.param.collectEntries { [(it.@name.text()):it.text()] })
     }
@@ -62,6 +75,14 @@ class ControlServerClient {
             <removeMock>
                 <name>${data.name}</name>
             </removeMock>
+        """, ContentType.create("text/xml", "UTF-8"))
+    }
+
+    private static StringEntity buildPeekMockRequest(PeekMockRequestData data) {
+        return new StringEntity("""\
+            <peekMock>
+                <name>${data.name}</name>
+            </peekMock>
         """, ContentType.create("text/xml", "UTF-8"))
     }
 

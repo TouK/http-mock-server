@@ -31,6 +31,8 @@ class HttpMockServer {
                             addMock(request, ex)
                         } else if (request.name() == 'removeMock') {
                             removeMock(request, ex)
+                        } else if (request.name() == 'peekMock') {
+                            peekMock(request, ex)
                         } else {
                             throw new RuntimeException('Unknown request')
                         }
@@ -109,44 +111,66 @@ class HttpMockServer {
         createResponse(ex, createMockRemovedResponse(mockEvents), 200)
     }
 
+    private void peekMock(GPathResult request, HttpExchange ex) {
+        String name = request.name
+        if (!(name in mockNames)) {
+            throw new RuntimeException('mock not registered')
+        }
+        log.info("Peeking mock $name")
+        List<MockEvent> mockEvents = childServers.collect { it.peekMock(name) }.flatten()
+        createResponse(ex, createMockPeekedResponse(mockEvents), 200)
+    }
+
     private static String createMockRemovedResponse(List<MockEvent> mockEvents) {
         StringWriter sw = new StringWriter()
         MarkupBuilder builder = new MarkupBuilder(sw)
         builder.mockRemoved {
-            mockEvents.each { MockEvent m ->
-                builder.mockEvent {
-                    builder.request {
-                        text m.request.text
-                        headers {
-                            m.request.headers.each {
-                                builder.param(name: it.key, it.value)
-                            }
-                        }
-                        query {
-                            m.request.query.each {
-                                builder.param(name: it.key, it.value)
-                            }
-                        }
-                        path {
-                            m.request.path.each {
-                                builder.elem it
-                            }
+            mockEventsToXml(mockEvents, builder)
+        }
+        return sw.toString()
+    }
+
+    private static String createMockPeekedResponse(List<MockEvent> mockEvents) {
+        StringWriter sw = new StringWriter()
+        MarkupBuilder builder = new MarkupBuilder(sw)
+        builder.mockPeeked {
+            mockEventsToXml(mockEvents, builder)
+        }
+        return sw.toString()
+    }
+
+    private static void mockEventsToXml(List<MockEvent> events, MarkupBuilder builder) {
+        events.each { MockEvent event ->
+            builder.mockEvent {
+                builder.request {
+                    text event.request.text
+                    headers {
+                        event.request.headers.each {
+                            builder.param(name: it.key, it.value)
                         }
                     }
-                    builder.response {
-                        text m.response.text
-                        headers {
-                            m.response.headers.each {
-                                builder.param(name: it.key, it.value)
-                            }
+                    query {
+                        event.request.query.each {
+                            builder.param(name: it.key, it.value)
                         }
-                        statusCode m.response.statusCode
                     }
+                    path {
+                        event.request.path.each {
+                            builder.elem it
+                        }
+                    }
+                }
+                builder.response {
+                    text event.response.text
+                    headers {
+                        event.response.headers.each {
+                            builder.param(name: it.key, it.value)
+                        }
+                    }
+                    statusCode event.response.statusCode
                 }
             }
         }
-        String string = sw.toString()
-        return string
     }
 
     private static void createErrorResponse(HttpExchange ex, Exception e) {

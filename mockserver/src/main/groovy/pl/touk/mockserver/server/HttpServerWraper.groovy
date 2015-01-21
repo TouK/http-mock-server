@@ -48,6 +48,10 @@ class HttpServerWraper {
         return executors.collect { it.removeMock(name) }.flatten()
     }
 
+    List<MockEvent> peekMock(String name) {
+        return executors.collect { it.peekMock(name) }.flatten()
+    }
+
     List<Mock> getMocks() {
         return executors.collect { it.mocks }.flatten()
     }

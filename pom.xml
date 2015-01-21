@@ -9,7 +9,7 @@
     <modules>
         <module>mockserver-client</module>
         <module>mockserver</module>
-        <!--<module>mockserver-tests</module>-->
+        <module>mockserver-tests</module>
     </modules>
 
     <properties>

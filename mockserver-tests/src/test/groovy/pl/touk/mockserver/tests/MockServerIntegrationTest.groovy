@@ -15,7 +15,7 @@ import spock.lang.Unroll
 
 class MockServerIntegrationTest extends Specification {
 
-    ControlServerClient controlServerClient
+    RemoteMockServer remoteMockServer
 
     HttpMockServer httpMockServer
 
@@ -24,7 +24,7 @@ class MockServerIntegrationTest extends Specification {
 
     def setup() {
         httpMockServer = new HttpMockServer(9000)
-        controlServerClient = new ControlServerClient('localhost', 9000)
+        remoteMockServer = new RemoteMockServer('localhost', 9000)
     }
 
     def cleanup() {
@@ -33,7 +33,7 @@ class MockServerIntegrationTest extends Specification {
 
     def "should add working rest mock on endpoint"() {
         expect:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest',
                     path: 'testEndpoint',
                     port: 9999,
@@ -49,12 +49,12 @@ class MockServerIntegrationTest extends Specification {
             GPathResult restPostResponse = Util.extractXmlResponse(response)
             restPostResponse.name() == 'goodResponseRest-request'
         expect:
-            controlServerClient.removeMock('testRest')?.size() == 1
+            remoteMockServer.removeMock('testRest')?.size() == 1
     }
 
     def "should add soap mock on endpoint"() {
         expect:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testSoap',
                     path: 'testEndpoint',
                     port: 9999,
@@ -71,16 +71,16 @@ class MockServerIntegrationTest extends Specification {
             soapPostResponse.name() == 'Envelope'
             soapPostResponse.Body.'goodResponseSoap-request'.size() == 1
         expect:
-            controlServerClient.removeMock('testSoap')?.size() == 1
+            remoteMockServer.removeMock('testSoap')?.size() == 1
     }
 
     def "should throw exception when try to remove mock when it does not exist"() {
         when:
-            controlServerClient.removeMock('testSoap')
+            remoteMockServer.removeMock('testSoap')
         then:
             thrown(MockDoesNotExist)
         expect:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testSoap',
                     path: 'testEndpoint',
                     port: 9999,
@@ -89,16 +89,16 @@ class MockServerIntegrationTest extends Specification {
                     soap: true
             ))
         and:
-            controlServerClient.removeMock('testSoap') == []
+            remoteMockServer.removeMock('testSoap') == []
         when:
-            controlServerClient.removeMock('testSoap')
+            remoteMockServer.removeMock('testSoap')
         then:
             thrown(MockDoesNotExist)
     }
 
     def "should not add mock with existing name"() {
         expect:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testSoap',
                     path: 'testEndpoint',
                     port: 9999,
@@ -107,7 +107,7 @@ class MockServerIntegrationTest extends Specification {
                     soap: true
             ))
         when:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testSoap',
                     path: 'testEndpoint2',
                     port: 9998,
@@ -121,7 +121,7 @@ class MockServerIntegrationTest extends Specification {
 
     def "should not add mock with empty name"() {
         when:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: '',
                     path: 'testEndpoint2',
                     port: 9998,
@@ -135,7 +135,7 @@ class MockServerIntegrationTest extends Specification {
 
     def "should add mock after deleting old mock with the same name"() {
         expect:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testSoap',
                     path: 'testEndpoint',
                     port: 9999,
@@ -144,9 +144,9 @@ class MockServerIntegrationTest extends Specification {
                     soap: true
             ))
         and:
-            controlServerClient.removeMock('testSoap') == []
+            remoteMockServer.removeMock('testSoap') == []
         and:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testSoap',
                     path: 'testEndpoint',
                     port: 9999,
@@ -158,14 +158,14 @@ class MockServerIntegrationTest extends Specification {
 
     def "should add simultaneously working post and rest mocks with the same predicate and endpoint nad port"() {
         given:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest',
                     path: 'testEndpoint',
                     port: 9999,
                     predicate: '''{req -> req.xml.name() == 'request'}''',
                     response: '''{req -> "<goodResponseRest-${req.xml.name()}/>"}'''
             ))
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testSoap',
                     path: 'testEndpoint',
                     port: 9999,
@@ -193,14 +193,14 @@ class MockServerIntegrationTest extends Specification {
     @Unroll
     def "should dispatch rest mocks when second on #name"() {
         given:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest1',
                     path: 'test1',
                     port: 9999,
                     predicate: '''{req -> req.xml.name() == 'request1'}''',
                     response: '''{req -> "<goodResponseRest1/>"}'''
             ))
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest2',
                     path: secondPath,
                     port: secondPort,
@@ -232,7 +232,7 @@ class MockServerIntegrationTest extends Specification {
     @Unroll
     def "should dispatch rest mock with response code"() {
         given:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest1',
                     path: 'test1',
                     port: 9999,
@@ -254,7 +254,7 @@ class MockServerIntegrationTest extends Specification {
 
     def "should return response code 404 and error body the same as request body when mocks does not apply"() {
         given:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest1',
                     path: 'test1',
                     port: 9999,
@@ -273,7 +273,7 @@ class MockServerIntegrationTest extends Specification {
 
     def "should inform that there was problem during adding mock - invalid port"() {
         when:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testSoap',
                     path: 'testEndpoint2',
                     port: -1,
@@ -287,13 +287,13 @@ class MockServerIntegrationTest extends Specification {
 
     def "should dispatch rest mock with get method"() {
         given:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest',
                     path: 'testEndpoint',
                     port: 9999,
                     response: '''{_ -> "<defaultResponse/>"}'''
             ))
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest2',
                     path: 'testEndpoint',
                     port: 9999,
@@ -310,13 +310,13 @@ class MockServerIntegrationTest extends Specification {
 
     def "should dispatch rest mock with trace method"() {
         given:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest',
                     path: 'testEndpoint',
                     port: 9999,
                     response: '''{_ -> "<defaultResponse/>"}'''
             ))
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest2',
                     path: 'testEndpoint',
                     port: 9999,
@@ -333,13 +333,13 @@ class MockServerIntegrationTest extends Specification {
 
     def "should dispatch rest mock with head method"() {
         given:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest',
                     path: 'testEndpoint',
                     port: 9999,
                     response: '''{_ -> "<defaultResponse/>"}'''
             ))
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest2',
                     path: 'testEndpoint',
                     port: 9999,
@@ -355,13 +355,13 @@ class MockServerIntegrationTest extends Specification {
 
     def "should dispatch rest mock with options method"() {
         given:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest',
                     path: 'testEndpoint',
                     port: 9999,
                     response: '''{_ -> "<defaultResponse/>"}'''
             ))
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest2',
                     path: 'testEndpoint',
                     port: 9999,
@@ -377,13 +377,13 @@ class MockServerIntegrationTest extends Specification {
 
     def "should dispatch rest mock with put method"() {
         given:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest',
                     path: 'test1',
                     port: 9999,
                     response: '''{_ -> "<defaultResponse/>"}'''
             ))
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest2',
                     path: 'test1',
                     port: 9999,
@@ -402,13 +402,13 @@ class MockServerIntegrationTest extends Specification {
 
     def "should dispatch rest mock with delete method"() {
         given:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest',
                     path: 'test1',
                     port: 9999,
                     response: '''{_ -> "<defaultResponse/>"}'''
             ))
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest2',
                     path: 'test1',
                     port: 9999,
@@ -425,13 +425,13 @@ class MockServerIntegrationTest extends Specification {
 
     def "should dispatch rest mock with patch method"() {
         given:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest',
                     path: 'test1',
                     port: 9999,
                     response: '''{_ -> "<defaultResponse/>"}'''
             ))
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest2',
                     path: 'test1',
                     port: 9999,
@@ -450,7 +450,7 @@ class MockServerIntegrationTest extends Specification {
 
     def "should add mock that return headers"() {
         given:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest',
                     path: 'testEndpoint',
                     port: 9999,
@@ -470,7 +470,7 @@ class MockServerIntegrationTest extends Specification {
 
     def "should add mock that accepts only when certain request headers exists"() {
         given:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest',
                     path: 'testEndpoint',
                     port: 9999,
@@ -499,7 +499,7 @@ class MockServerIntegrationTest extends Specification {
 
     def "should add mock that accepts only when certain query params exists"() {
         given:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest',
                     path: 'testEndpoint',
                     port: 9999,
@@ -523,7 +523,7 @@ class MockServerIntegrationTest extends Specification {
 
     def "should add mock that accepts only when request has specific body"() {
         given:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest',
                     path: 'testEndpoint',
                     port: 9999,
@@ -548,7 +548,7 @@ class MockServerIntegrationTest extends Specification {
 
     def "should add mock which response json to json"() {
         given:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest',
                     path: 'testEndpoint',
                     port: 9999,
@@ -573,39 +573,39 @@ class MockServerIntegrationTest extends Specification {
 
     def "should get list mocks"() {
         given:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest2',
                     path: 'testEndpoint',
                     port: 9998
             ))
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest4',
                     path: 'testEndpoint',
                     port: 9999
             ))
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest3',
                     path: 'testEndpoint2',
                     port: 9999
             ))
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest5',
                     path: 'testEndpoint',
                     port: 9999
             ))
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest6',
                     path: 'testEndpoint2',
                     port: 9999
             ))
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest',
                     path: 'testEndpoint',
                     port: 9999
             ))
-            controlServerClient.removeMock('testRest5')
+            remoteMockServer.removeMock('testRest5')
         expect:
-            controlServerClient.listMocks() == [
+            remoteMockServer.listMocks() == [
                     new RegisteredMock('testRest', 'testEndpoint', 9999),
                     new RegisteredMock('testRest2', 'testEndpoint', 9998),
                     new RegisteredMock('testRest3', 'testEndpoint2', 9999),
@@ -616,7 +616,7 @@ class MockServerIntegrationTest extends Specification {
 
     def "should add mock accepts path certain path params"() {
         given:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest',
                     path: 'testEndpoint',
                     port: 9999,
@@ -639,7 +639,7 @@ class MockServerIntegrationTest extends Specification {
 
     def "should get mock report when deleting mock"() {
         expect:
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest',
                     path: 'testEndpoint',
                     port: 9999,
@@ -649,7 +649,7 @@ class MockServerIntegrationTest extends Specification {
                     responseHeaders: '''{req -> ['aaa':'14']}''',
                     soap: false
             ))
-            controlServerClient.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest2',
                     path: 'testEndpoint',
                     port: 9999,
@@ -681,7 +681,7 @@ class MockServerIntegrationTest extends Specification {
             GPathResult restPostResponse3 = Util.extractXmlResponse(response3)
             restPostResponse3.name() == 'goodResponseRest'
         when:
-            List<MockEvent> mockEvents1 = controlServerClient.removeMock('testRest')
+            List<MockEvent> mockEvents1 = remoteMockServer.removeMock('testRest')
         then:
             mockEvents1.size() == 2
             mockEvents1[0].request.text == '<request/>'
@@ -700,7 +700,82 @@ class MockServerIntegrationTest extends Specification {
             mockEvents1[1].response.text == '<goodResponseRest-request15/>'
             mockEvents1[1].response.statusCode == 201
         when:
-            List<MockEvent> mockEvents2 = controlServerClient.removeMock('testRest2')
+            List<MockEvent> mockEvents2 = remoteMockServer.removeMock('testRest2')
+        then:
+            mockEvents2.size() == 1
+            mockEvents2[0].request.text == '<reqXYZ/>'
+            !mockEvents2[0].request.headers?.keySet()?.empty
+            mockEvents2[0].request.query == [id: '123']
+            mockEvents2[0].request.path == ['testEndpoint']
+            mockEvents2[0].response.headers.aaa == '15'
+            mockEvents2[0].response.text == '<goodResponseRest/>'
+            mockEvents2[0].response.statusCode == 202
+    }
+
+    def "should get mock report when peeking mock"() {
+        expect:
+            remoteMockServer.addMock(new AddMockRequestData(
+                    name: 'testRest',
+                    path: 'testEndpoint',
+                    port: 9999,
+                    predicate: '''{req -> req.xml.name()[0..6] == 'request' }''',
+                    response: '''{req -> "<goodResponseRest-${req.xml.name()}/>"}''',
+                    statusCode: 201,
+                    responseHeaders: '''{req -> ['aaa':'14']}''',
+                    soap: false
+            ))
+            remoteMockServer.addMock(new AddMockRequestData(
+                    name: 'testRest2',
+                    path: 'testEndpoint',
+                    port: 9999,
+                    predicate: '''{req -> req.xml.name() == 'reqXYZ' }''',
+                    response: '''{req -> "<goodResponseRest/>"}''',
+                    statusCode: 202,
+                    responseHeaders: '''{req -> ['aaa':'15']}''',
+                    soap: false
+            ))
+        when:
+            HttpPost post1 = new HttpPost('http://localhost:9999/testEndpoint')
+            post1.entity = new StringEntity('<request/>', ContentType.create("text/xml", "UTF-8"))
+            CloseableHttpResponse response1 = client.execute(post1)
+        then:
+            GPathResult restPostResponse1 = Util.extractXmlResponse(response1)
+            restPostResponse1.name() == 'goodResponseRest-request'
+        when:
+            HttpPost post2 = new HttpPost('http://localhost:9999/testEndpoint/hello')
+            post2.entity = new StringEntity('<request15/>', ContentType.create("text/xml", "UTF-8"))
+            CloseableHttpResponse response2 = client.execute(post2)
+        then:
+            GPathResult restPostResponse2 = Util.extractXmlResponse(response2)
+            restPostResponse2.name() == 'goodResponseRest-request15'
+        when:
+            HttpPost post3 = new HttpPost('http://localhost:9999/testEndpoint?id=123')
+            post3.entity = new StringEntity('<reqXYZ/>', ContentType.create("text/xml", "UTF-8"))
+            CloseableHttpResponse response3 = client.execute(post3)
+        then:
+            GPathResult restPostResponse3 = Util.extractXmlResponse(response3)
+            restPostResponse3.name() == 'goodResponseRest'
+        when:
+            List<MockEvent> mockEvents1 = remoteMockServer.peekMock('testRest')
+        then:
+            mockEvents1.size() == 2
+            mockEvents1[0].request.text == '<request/>'
+            !mockEvents1[0].request.headers?.keySet()?.empty
+            mockEvents1[0].request.query == [:]
+            mockEvents1[0].request.path == ['testEndpoint']
+            !mockEvents1[0].response.headers?.keySet()?.empty
+            mockEvents1[0].response.text == '<goodResponseRest-request/>'
+            mockEvents1[0].response.statusCode == 201
+
+            mockEvents1[1].request.text == '<request15/>'
+            !mockEvents1[1].request.headers?.keySet()?.empty
+            mockEvents1[1].request.query == [:]
+            mockEvents1[1].request.path == ['testEndpoint', 'hello']
+            !mockEvents1[1].response.headers?.keySet()?.empty
+            mockEvents1[1].response.text == '<goodResponseRest-request15/>'
+            mockEvents1[1].response.statusCode == 201
+        when:
+            List<MockEvent> mockEvents2 = remoteMockServer.peekMock('testRest2')
         then:
             mockEvents2.size() == 1
             mockEvents2[0].request.text == '<reqXYZ/>'

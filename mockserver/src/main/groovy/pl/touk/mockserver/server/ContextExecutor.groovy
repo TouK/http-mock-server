@@ -60,6 +60,14 @@ class ContextExecutor {
         return []
     }
 
+    List<MockEvent> peekMock(String name) {
+        Mock mock = mocks.find { it.name == name }
+        if (mock) {
+            return mock.history
+        }
+        return []
+    }
+
     void addMock(Mock mock) {
         mocks << mock
     }
