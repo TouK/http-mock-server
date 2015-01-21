@@ -15,8 +15,8 @@ java -jar mockserver-<VERSION>-jar-with-dependencies.jar  [PORT]
 ## Create mock on server via client
 
 ```
-ControlServerClient controlServerClient = new ControlServerClient('localhost', <PORT>)
-controlServerClient.addMock(new AddMockRequestData(
+RemoteMockServer remoteMockServer = new RemoteMockServer('localhost', <PORT>)
+remoteMockServer.addMock(new AddMockRequestData(
                     name: '...',
                     path: '...',
                     port: ...,
@@ -72,7 +72,7 @@ Response with error message if failure:
 Via client:
 
 ```
-List<MockEvent> mockEvents = controlServerClient.peekMock('...')
+List<MockEvent> mockEvents = remoteMockServer.peekMock('...')
 ```
 
 Via sending POST request to localhost:<PORT>/serverControl
@@ -126,7 +126,7 @@ Response with error message if failure:
 Via client:
 
 ```
-List<MockEvent> mockEvents = controlServerClient.removeMock('...')
+List<MockEvent> mockEvents = remoteMockServer.removeMock('...')
 ```
 
 Via sending POST request to localhost:<PORT>/serverControl
@@ -181,7 +181,7 @@ Response with error message if failure:
 Via client:
 
 ```
-List<RegisteredMock> mocks = controlServerClient.listMocks()
+List<RegisteredMock> mocks = remoteMockServer.listMocks()
 ```
 
 or via sending GET request to localhost:<PORT>/serverControl
