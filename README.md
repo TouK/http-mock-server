@@ -56,6 +56,17 @@ or via sending POST request to localhost:<PORT>/serverControl
 * method - POST|PUT|DELETE|GET|TRACE|OPTION|HEAD, expected http method of request, default POST
 * responseHeaders - groovyClosure as string which must evaluate to Map which will be added to response headers, default { _ -> [:] }
 
+In closures input parameter (called req) contains properties:
+
+
+* text - request body as java.util.String
+* headers - java.util.Map with request headers
+* query - java.util.Map with query parameters
+* xml - groovy.util.slurpersupport.GPathResult created from request body (if request body is valid xml)
+* soap - groovy.util.slurpersupport.GPathResult created from request body without Envelope and Body elements (if request body is valid soap xml)
+* json - java.lang.Object created from request body (if request body is valid json)
+* path - java.util.List<String> with not empty parts of request path 
+
 Response if success:
 
 ```
