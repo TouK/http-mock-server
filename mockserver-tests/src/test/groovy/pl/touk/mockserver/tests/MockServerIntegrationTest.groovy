@@ -298,7 +298,7 @@ class MockServerIntegrationTest extends Specification {
                     path: 'testEndpoint',
                     port: 9999,
                     response: '''{_ -> "<getResponse/>"}''',
-                    method: AddMockRequestData.Method.GET
+                    method: Method.GET
             ))
             HttpGet restGet = new HttpGet('http://localhost:9999/testEndpoint')
         when:
@@ -321,7 +321,7 @@ class MockServerIntegrationTest extends Specification {
                     path: 'testEndpoint',
                     port: 9999,
                     response: '''{_ -> "<traceResponse/>"}''',
-                    method: AddMockRequestData.Method.TRACE
+                    method: Method.TRACE
             ))
             HttpTrace restTrace = new HttpTrace('http://localhost:9999/testEndpoint')
         when:
@@ -343,7 +343,7 @@ class MockServerIntegrationTest extends Specification {
                     name: 'testRest2',
                     path: 'testEndpoint',
                     port: 9999,
-                    method: AddMockRequestData.Method.HEAD
+                    method: Method.HEAD
             ))
             HttpHead restHead = new HttpHead('http://localhost:9999/testEndpoint')
         when:
@@ -365,7 +365,7 @@ class MockServerIntegrationTest extends Specification {
                     name: 'testRest2',
                     path: 'testEndpoint',
                     port: 9999,
-                    method: AddMockRequestData.Method.OPTIONS
+                    method: Method.OPTIONS
             ))
             HttpOptions restOptions = new HttpOptions('http://localhost:9999/testEndpoint')
         when:
@@ -389,7 +389,7 @@ class MockServerIntegrationTest extends Specification {
                     port: 9999,
                     predicate: '''{req -> req.xml.name() == 'request1'}''',
                     response: '''{_ -> "<goodResponseRest1/>"}''',
-                    method: AddMockRequestData.Method.PUT
+                    method: Method.PUT
             ))
             HttpPut request = new HttpPut('http://localhost:9999/test1')
             request.entity = new StringEntity('<request1/>', ContentType.create("text/xml", "UTF-8"))
@@ -413,7 +413,7 @@ class MockServerIntegrationTest extends Specification {
                     path: 'test1',
                     port: 9999,
                     response: '''{_ -> "<goodResponseRest1/>"}''',
-                    method: AddMockRequestData.Method.DELETE
+                    method: Method.DELETE
             ))
             HttpDelete request = new HttpDelete('http://localhost:9999/test1')
         when:
@@ -437,7 +437,7 @@ class MockServerIntegrationTest extends Specification {
                     port: 9999,
                     predicate: '''{req -> req.xml.name() == 'request1'}''',
                     response: '''{_ -> "<goodResponseRest1/>"}''',
-                    method: AddMockRequestData.Method.PATCH
+                    method: Method.PATCH
             ))
             HttpPatch request = new HttpPatch('http://localhost:9999/test1')
             request.entity = new StringEntity('<request1/>', ContentType.create("text/xml", "UTF-8"))

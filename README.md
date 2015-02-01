@@ -42,7 +42,7 @@ or via sending POST request to localhost:<PORT>/serverControl
     <soap>...</soap>
     <statusCode>...</statusCode>
     <method>...</method>
-    <responseHeaders>,,,</responseHeaders>
+    <responseHeaders>...</responseHeaders>
 </addMock>
 ```
 

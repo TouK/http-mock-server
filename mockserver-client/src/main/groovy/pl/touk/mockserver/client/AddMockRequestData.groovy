@@ -28,15 +28,5 @@ class AddMockRequestData {
     void setResponseHeaders(String responseHeaders) {
         this.responseHeaders = StringEscapeUtils.escapeXml11(responseHeaders)
     }
-
-    enum Method {
-        POST,
-        GET,
-        DELETE,
-        PUT,
-        TRACE,
-        HEAD,
-        OPTIONS,
-        PATCH
-    }
 }
+
