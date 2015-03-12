@@ -107,7 +107,7 @@ class RemoteMockServer {
         CloseableHttpResponse response = client.execute(get)
         GPathResult xml = Util.extractXmlResponse(response)
         if (xml.name() == 'mocks') {
-            return xml.mock.collect { new RegisteredMock(it.name.text(), it.path.text(), it.port.text() as int) }
+            return xml.mock.collect { new RegisteredMock(it.name.text(), it.path.text(), it.port.text() as int, it.predicate.text(), it.response.text(), it.responseHeaders.text()) }
         }
         return []
     }

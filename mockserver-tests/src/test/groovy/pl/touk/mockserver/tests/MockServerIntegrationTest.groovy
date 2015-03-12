@@ -576,7 +576,10 @@ class MockServerIntegrationTest extends Specification {
             remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest2',
                     path: 'testEndpoint',
-                    port: 9998
+                    port: 9998,
+                    predicate: '''{ req -> req.xml.name() == 'request1'}''',
+                    response: '''{ req -> '<response/>' }''',
+                    responseHeaders: '{ _ -> [a: "b"] }'
             ))
             remoteMockServer.addMock(new AddMockRequestData(
                     name: 'testRest4',
@@ -606,11 +609,11 @@ class MockServerIntegrationTest extends Specification {
             remoteMockServer.removeMock('testRest5')
         expect:
             remoteMockServer.listMocks() == [
-                    new RegisteredMock('testRest', 'testEndpoint', 9999),
-                    new RegisteredMock('testRest2', 'testEndpoint', 9998),
-                    new RegisteredMock('testRest3', 'testEndpoint2', 9999),
-                    new RegisteredMock('testRest4', 'testEndpoint', 9999),
-                    new RegisteredMock('testRest6', 'testEndpoint2', 9999)
+                    new RegisteredMock('testRest', 'testEndpoint', 9999, '{ _ -> true }', '''{ _ -> '' }''', '{ _ -> [:] }'),
+                    new RegisteredMock('testRest2', 'testEndpoint', 9998, '''{ req -> req.xml.name() == 'request1'}''', '''{ req -> '<response/>' }''', '{ _ -> [a: "b"] }'),
+                    new RegisteredMock('testRest3', 'testEndpoint2', 9999, '{ _ -> true }', '''{ _ -> '' }''', '{ _ -> [:] }'),
+                    new RegisteredMock('testRest4', 'testEndpoint', 9999, '{ _ -> true }', '''{ _ -> '' }''', '{ _ -> [:] }'),
+                    new RegisteredMock('testRest6', 'testEndpoint2', 9999, '{ _ -> true }', '''{ _ -> '' }''', '{ _ -> [:] }')
             ]
     }
 

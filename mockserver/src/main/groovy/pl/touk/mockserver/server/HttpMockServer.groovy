@@ -55,6 +55,9 @@ class HttpMockServer {
                         name mock.name
                         path mock.path
                         port mock.port
+                        predicate mock.predicateClosureText
+                        response mock.responseClosureText
+                        responseHeaders mock.responseHeadersClosureText
                     }
             }
         }
@@ -116,7 +119,7 @@ class HttpMockServer {
         if (!(name in mockNames)) {
             throw new RuntimeException('mock not registered')
         }
-        log.info("Peeking mock $name")
+        log.trace("Peeking mock $name")
         List<MockEvent> mockEvents = childServers.collect { it.peekMock(name) }.flatten()
         createResponse(ex, createMockPeekedResponse(mockEvents), 200)
     }

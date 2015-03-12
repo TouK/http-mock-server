@@ -13,9 +13,12 @@ class Mock implements Comparable<Mock> {
     final String name
     final String path
     final int port
-    Closure predicate = { _ -> true }
-    Closure response = { _ -> '' }
-    Closure responseHeaders = { _ -> [:] }
+    String predicateClosureText = '{ _ -> true }'
+    String responseClosureText = '''{ _ -> '' }'''
+    String responseHeadersClosureText = '{ _ -> [:] }'
+    Closure predicate = toClosure(predicateClosureText)
+    Closure response = toClosure(responseClosureText)
+    Closure responseHeaders =toClosure(responseHeadersClosureText)
     boolean soap = false
     int statusCode = 200
     String method = 'POST'
@@ -55,13 +58,19 @@ class Mock implements Comparable<Mock> {
 
     void setPredicate(String predicate) {
         if (predicate) {
-            this.predicate = Eval.me(predicate) as Closure
+            this.predicateClosureText = predicate
+            this.predicate = toClosure(predicate)
         }
+    }
+
+    private Closure toClosure(String predicate) {
+        return Eval.me(predicate) as Closure
     }
 
     void setResponse(String response) {
         if (response) {
-            this.response = Eval.me(response) as Closure
+            this.responseClosureText = response
+            this.response = toClosure(response)
         }
     }
 
@@ -85,7 +94,8 @@ class Mock implements Comparable<Mock> {
 
     void setResponseHeaders(String responseHeaders) {
         if (responseHeaders) {
-            this.responseHeaders = Eval.me(responseHeaders) as Closure
+            this.responseHeadersClosureText = responseHeaders
+            this.responseHeaders = toClosure(responseHeaders)
         }
     }
 
