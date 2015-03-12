@@ -5,7 +5,7 @@
     <groupId>pl.touk.mockserver</groupId>
     <artifactId>http-mock-server</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.3</version>
+    <version>1.0.4-SNAPSHOT</version>
     <modules>
         <module>mockserver-client</module>
         <module>mockserver</module>
