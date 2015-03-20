@@ -9,6 +9,9 @@
 
     <artifactId>mockserver-client</artifactId>
 
+    <build>
+        <defaultGoal>clean install</defaultGoal>
+    </build>
     <dependencies>
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
