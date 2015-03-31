@@ -14,7 +14,7 @@ java -jar mockserver-<VERSION>-jar-with-dependencies.jar  [PORT]
 
 ## Create mock on server via client
 
-```
+```java
 RemoteMockServer remoteMockServer = new RemoteMockServer('localhost', <PORT>)
 remoteMockServer.addMock(new AddMockRequestData(
                     name: '...',
@@ -32,7 +32,7 @@ remoteMockServer.addMock(new AddMockRequestData(
 or via sending POST request to localhost:<PORT>/serverControl
 
 
-```
+```xml
 <addMock>
     <name>...</name>
     <path>...</path>
@@ -69,26 +69,26 @@ In closures input parameter (called req) contains properties:
 
 Response if success:
 
-```
+```xml
 <mockAdded/>
 ```
 
 Response with error message if failure:
 
-```
+```xml
 <exceptionOccured>...</exceptionOccured>
 ```
 
 ## Mock could be peeked to get get report of its invocations.
 Via client:
 
-```
+```java
 List<MockEvent> mockEvents = remoteMockServer.peekMock('...')
 ```
 
 Via sending POST request to localhost:<PORT>/serverControl
 
-```
+```xml
 <peekMock>
     <name>...</name>
 </peekMock>
@@ -96,7 +96,7 @@ Via sending POST request to localhost:<PORT>/serverControl
 
 Response if success:
 
-```
+```xml
 <mockPeeked>
   <mockEvent>
     <request>
@@ -129,20 +129,20 @@ Response if success:
 
 Response with error message if failure:
 
-```
+```xml
 <exceptionOccured>...</exceptionOccured>
 ```
 
 ## When mock was used it could be unregistered by name. It also returns report of mock invocations.
 Via client:
 
-```
+```java
 List<MockEvent> mockEvents = remoteMockServer.removeMock('...')
 ```
 
 Via sending POST request to localhost:<PORT>/serverControl
 
-```
+```xml
 <removeMock>
     <name>...</name>
 </removeMock>
@@ -150,7 +150,7 @@ Via sending POST request to localhost:<PORT>/serverControl
 
 Response if success:
 
-```
+```xml
 <mockRemoved>
   <mockEvent>
     <request>
@@ -183,7 +183,7 @@ Response if success:
 
 Response with error message if failure:
 
-```
+```xml
 <exceptionOccured>...</exceptionOccured>
 ```
 
@@ -191,7 +191,7 @@ Response with error message if failure:
 ## List of current registered mocks could be retrieved:
 Via client:
 
-```
+```java
 List<RegisteredMock> mocks = remoteMockServer.listMocks()
 ```
 
@@ -199,7 +199,7 @@ or via sending GET request to localhost:<PORT>/serverControl
 
 Response:
 
-```
+```xml
 <mocks>
   <mock>
     <name>...</name>
