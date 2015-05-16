@@ -64,7 +64,8 @@ class Mock implements Comparable<Mock> {
     }
 
     private Closure toClosure(String predicate) {
-        return Eval.me(predicate) as Closure
+        GroovyShell sh = new GroovyShell(this.class.classLoader);
+        return sh.evaluate(predicate) as Closure
     }
 
     void setResponse(String response) {
