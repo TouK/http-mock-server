@@ -1,3 +1,5 @@
+[![Build Status](https://img.shields.io/travis/TouK/http-mock-server/master.svg?style=flat)](https://travis-ci.org/TouK/http-mock-server)
+
 # HTTP MOCK SERVER
 
 ## Create server jar (in mockserver directory)
