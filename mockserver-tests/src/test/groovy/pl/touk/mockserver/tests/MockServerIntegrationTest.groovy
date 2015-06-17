@@ -1,13 +1,29 @@
 package pl.touk.mockserver.tests
 
 import groovy.util.slurpersupport.GPathResult
-import org.apache.http.client.methods.*
+import org.apache.http.client.methods.CloseableHttpResponse
+import org.apache.http.client.methods.HttpDelete
+import org.apache.http.client.methods.HttpGet
+import org.apache.http.client.methods.HttpHead
+import org.apache.http.client.methods.HttpOptions
+import org.apache.http.client.methods.HttpPatch
+import org.apache.http.client.methods.HttpPost
+import org.apache.http.client.methods.HttpPut
+import org.apache.http.client.methods.HttpTrace
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
-import pl.touk.mockserver.client.*
+import pl.touk.mockserver.client.AddMockRequestData
+import pl.touk.mockserver.client.InvalidMockDefinition
+import pl.touk.mockserver.client.Method
+import pl.touk.mockserver.client.MockAlreadyExists
+import pl.touk.mockserver.client.MockDoesNotExist
+import pl.touk.mockserver.client.MockEvent
+import pl.touk.mockserver.client.RegisteredMock
+import pl.touk.mockserver.client.RemoteMockServer
+import pl.touk.mockserver.client.Util
 import pl.touk.mockserver.server.HttpMockServer
 import spock.lang.Shared
 import spock.lang.Specification
@@ -50,6 +66,28 @@ class MockServerIntegrationTest extends Specification {
             restPostResponse.name() == 'goodResponseRest-request'
         expect:
             remoteMockServer.removeMock('testRest')?.size() == 1
+    }
+
+    def "should add working rest mock on endpoint with utf"() {
+        expect:
+            remoteMockServer.addMock(new AddMockRequestData(
+                    name: 'testRestUtf',
+                    path: 'testEndpoint',
+                    port: 9999,
+                    predicate: '''{req -> req.xml.name() == 'request' && req.xml.@test == 'łżźćąś'}''',
+                    response: '''{req -> "<goodResponseRest-${req.xml.name()} ans='łżźćąś'/>"}''',
+                    soap: false
+            ))
+        when:
+            HttpPost restPost = new HttpPost('http://localhost:9999/testEndpoint')
+            restPost.entity = new StringEntity('<request test="łżźćąś"/>', ContentType.create("text/xml", "UTF-8"))
+            CloseableHttpResponse response = client.execute(restPost)
+        then:
+            GPathResult restPostResponse = Util.extractXmlResponse(response)
+            restPostResponse.name() == 'goodResponseRest-request'
+            restPostResponse.@ans == 'łżźćąś'
+        expect:
+            remoteMockServer.removeMock('testRestUtf')?.size() == 1
     }
 
     def "should add soap mock on endpoint"() {

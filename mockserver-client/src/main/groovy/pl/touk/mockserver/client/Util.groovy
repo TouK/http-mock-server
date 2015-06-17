@@ -13,7 +13,7 @@ import org.apache.http.util.EntityUtils
 class Util {
     static GPathResult extractXmlResponse(CloseableHttpResponse response) {
         HttpEntity entity = response.entity
-        GPathResult xml = new XmlSlurper().parseText(EntityUtils.toString(entity))
+        GPathResult xml = new XmlSlurper().parseText(EntityUtils.toString(entity, 'UTF-8'))
         EntityUtils.consumeQuietly(entity)
         return xml
     }
@@ -27,7 +27,7 @@ class Util {
 
     static Object extractJsonResponse(CloseableHttpResponse response) {
         HttpEntity entity = response.entity
-        Object json = new JsonSlurper().parseText(EntityUtils.toString(entity))
+        Object json = new JsonSlurper().parseText(EntityUtils.toString(entity, 'UTF-8'))
         EntityUtils.consumeQuietly(entity)
         return json
     }
