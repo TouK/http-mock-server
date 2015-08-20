@@ -7,4 +7,5 @@ import groovy.transform.TypeChecked
 @TypeChecked
 class RemoveMockRequestData {
     String name
+    boolean skipReport = false
 }
