@@ -147,10 +147,11 @@ Via sending POST request to localhost:<PORT>/serverControl
 ```xml
 <removeMock>
     <name>...</name>
+    <skipReport>...</skipReport>
 </removeMock>
 ```
 
-Response if success:
+Response if success (and skipReport not given or equal false):
 
 ```xml
 <mockRemoved>
@@ -182,6 +183,13 @@ Response if success:
   ...
 </mockRemoved>
 ```
+
+If skipReport is set to true then response will be:
+
+```xml
+<mockRemoved/>
+```
+
 
 Response with error message if failure:
 
