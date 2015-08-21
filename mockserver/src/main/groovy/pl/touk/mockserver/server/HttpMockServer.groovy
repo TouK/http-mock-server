@@ -106,7 +106,6 @@ class HttpMockServer {
     private void removeMock(GPathResult request, HttpExchange ex) {
         String name = request.name
         boolean skipReport = Boolean.parseBoolean(request.skipReport?.toString() ?: 'false')
-        println "!!!!!!!!! $skipReport"
         if (!(name in mockNames)) {
             throw new RuntimeException('mock not registered')
         }
