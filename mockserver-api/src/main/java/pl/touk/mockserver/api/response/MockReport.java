@@ -2,6 +2,7 @@ package pl.touk.mockserver.api.response;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import pl.touk.mockserver.api.request.Method;
 
 import javax.xml.bind.annotation.XmlElement;
 
@@ -24,4 +25,13 @@ public class MockReport {
 
     @XmlElement(required = true)
     private String responseHeaders;
+
+    @XmlElement(required = true)
+    private boolean soap;
+
+    @XmlElement(required = true)
+    private Method method;
+
+    @XmlElement(required = true)
+    private int statusCode;
 }

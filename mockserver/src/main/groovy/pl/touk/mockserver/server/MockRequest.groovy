@@ -46,7 +46,7 @@ class MockRequest {
     }
 
     private static GPathResult getSoapBodyContent(GPathResult xml) {
-        return xml.Body.'**'[1]
+        return xml.Body.'**'[1] as GPathResult
     }
 
     private static Object inputToJson(String text) {
@@ -66,7 +66,7 @@ class MockRequest {
     private static Map<String, String> headersToMap(Headers headers) {
         return headers.collectEntries {
             [it.key.toLowerCase(), it.value.join(',')]
-        }
+        } as Map<String, String>
     }
 
 }

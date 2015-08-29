@@ -611,7 +611,10 @@ class MockServerIntegrationTest extends Specification {
             remoteMockServer.addMock(new AddMock(
                     name: 'testRest4',
                     path: 'testEndpoint',
-                    port: 9999
+                    port: 9999,
+                    soap: true,
+                    statusCode: 204,
+                    method: Method.PUT
             ))
             remoteMockServer.addMock(new AddMock(
                     name: 'testRest3',
@@ -636,11 +639,11 @@ class MockServerIntegrationTest extends Specification {
             remoteMockServer.removeMock('testRest5')
         expect:
             remoteMockServer.listMocks() == [
-                    new MockReport(name: 'testRest', path: 'testEndpoint', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }'),
-                    new MockReport(name: 'testRest2', path: 'testEndpoint', port: 9998, predicate: '''{ req -> req.xml.name() == 'request1'}''', response: '''{ req -> '<response/>' }''', responseHeaders: '{ _ -> [a: "b"] }'),
-                    new MockReport(name: 'testRest3', path: 'testEndpoint2', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }'),
-                    new MockReport(name: 'testRest4', path: 'testEndpoint', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }'),
-                    new MockReport(name: 'testRest6', path: 'testEndpoint2', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }')
+                    new MockReport(name: 'testRest', path: 'testEndpoint', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: false, statusCode: 200, method: Method.POST),
+                    new MockReport(name: 'testRest2', path: 'testEndpoint', port: 9998, predicate: '''{ req -> req.xml.name() == 'request1'}''', response: '''{ req -> '<response/>' }''', responseHeaders: '{ _ -> [a: "b"] }', soap: false, statusCode: 200, method: Method.POST),
+                    new MockReport(name: 'testRest3', path: 'testEndpoint2', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: false, statusCode: 200, method: Method.POST),
+                    new MockReport(name: 'testRest4', path: 'testEndpoint', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: true, statusCode: 204, method: Method.PUT),
+                    new MockReport(name: 'testRest6', path: 'testEndpoint2', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: false, statusCode: 200, method: Method.POST)
             ]
     }
 

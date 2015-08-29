@@ -3,6 +3,7 @@ package pl.touk.mockserver.server
 import com.sun.net.httpserver.HttpExchange
 import groovy.transform.PackageScope
 import groovy.util.logging.Slf4j
+import pl.touk.mockserver.api.request.Method
 
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -24,7 +25,7 @@ class ContextExecutor {
                 log.debug("Request: ${request.text}")
                 for (Mock mock : mocks) {
                     try {
-                        if (mock.match(ex.requestMethod, request)) {
+                        if (mock.match(Method.valueOf(ex.requestMethod), request)) {
                             log.debug("Mock ${mock.name} match request ${request.text}")
                             MockResponse httpResponse = mock.apply(request)
                             fillExchange(ex, httpResponse)

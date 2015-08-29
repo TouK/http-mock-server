@@ -3,6 +3,7 @@ package pl.touk.mockserver.server
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.PackageScope
 import groovy.util.logging.Slf4j
+import pl.touk.mockserver.api.request.Method
 
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -21,7 +22,7 @@ class Mock implements Comparable<Mock> {
     Closure responseHeaders = toClosure(responseHeadersClosureText)
     boolean soap = false
     int statusCode = 200
-    String method = 'POST'
+    Method method = Method.POST
     int counter = 0
     final List<MockEvent> history = new CopyOnWriteArrayList<>()
 
@@ -34,7 +35,7 @@ class Mock implements Comparable<Mock> {
         this.port = port
     }
 
-    boolean match(String method, MockRequest request) {
+    boolean match(Method method, MockRequest request) {
         return this.method == method && predicate(request)
     }
 
@@ -90,7 +91,7 @@ class Mock implements Comparable<Mock> {
         }
     }
 
-    void setMethod(String method) {
+    void setMethod(Method method) {
         if (method) {
             this.method = method
         }

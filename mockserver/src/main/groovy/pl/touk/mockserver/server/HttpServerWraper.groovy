@@ -19,7 +19,7 @@ class HttpServerWraper {
         this.port = port
         InetSocketAddress addr = new InetSocketAddress(Inet4Address.getByName("0.0.0.0"), port)
         httpServer = HttpServer.create(addr, 0)
-        httpServer.executor = Executors.newCachedThreadPool()
+        httpServer.executor = Executors.newWorkStealingPool()
         log.info("Http server starting on port $port...")
         httpServer.start()
         log.info('Http server is started')
@@ -45,14 +45,14 @@ class HttpServerWraper {
     }
 
     List<MockEvent> removeMock(String name) {
-        return executors.collect { it.removeMock(name) }.flatten()
+        return executors.collect { it.removeMock(name) }.flatten() as List<MockEvent>
     }
 
     List<MockEvent> peekMock(String name) {
-        return executors.collect { it.peekMock(name) }.flatten()
+        return executors.collect { it.peekMock(name) }.flatten() as List<MockEvent>
     }
 
     List<Mock> getMocks() {
-        return executors.collect { it.mocks }.flatten()
+        return executors.collect { it.mocks }.flatten() as List<Mock>
     }
 }

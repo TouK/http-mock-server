@@ -2,14 +2,11 @@ package pl.touk.mockserver.server
 
 import com.sun.net.httpserver.HttpExchange
 import groovy.util.logging.Slf4j
-import pl.touk.mockserver.api.request.AddMock
-import pl.touk.mockserver.api.request.MockServerRequest
-import pl.touk.mockserver.api.request.PeekMock
-import pl.touk.mockserver.api.request.RemoveMock
+import pl.touk.mockserver.api.request.*
 import pl.touk.mockserver.api.response.*
 
 import javax.xml.bind.JAXBContext
-import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArraySet
 
 import static pl.touk.mockserver.server.Util.createResponse
@@ -18,7 +15,7 @@ import static pl.touk.mockserver.server.Util.createResponse
 class HttpMockServer {
 
     private final HttpServerWraper httpServerWraper
-    private final List<HttpServerWraper> childServers = new CopyOnWriteArrayList<>()
+    private final Map<Integer, HttpServerWraper> childServers = new ConcurrentHashMap<>()
     private final Set<String> mockNames = new CopyOnWriteArraySet<>()
 
     private static
@@ -61,7 +58,10 @@ class HttpMockServer {
                             port: it.port,
                             predicate: it.predicateClosureText,
                             response: it.responseClosureText,
-                            responseHeaders: it.responseHeadersClosureText
+                            responseHeaders: it.responseHeadersClosureText,
+                            soap: it.soap,
+                            method: it.method,
+                            statusCode: it.statusCode as int
                     )
                 }
         )
@@ -69,7 +69,7 @@ class HttpMockServer {
     }
 
     Set<Mock> listMocks() {
-        return childServers.collect { it.mocks }.flatten() as TreeSet<Mock>
+        return childServers.values().collect { it.mocks }.flatten() as TreeSet<Mock>
     }
 
     private void addMock(AddMock request, HttpExchange ex) {
@@ -85,10 +85,7 @@ class HttpMockServer {
     }
 
     private static Mock mockFromRequest(AddMock request) {
-        String name = request.name
-        String mockPath = request.path
-        int mockPort = request.port
-        Mock mock = new Mock(name, mockPath, mockPort)
+        Mock mock = new Mock(request.name, request.path, request.port)
         mock.predicate = request.predicate
         mock.response = request.response
         mock.soap = request.soap
@@ -99,10 +96,10 @@ class HttpMockServer {
     }
 
     private HttpServerWraper getOrCreateChildServer(int mockPort) {
-        HttpServerWraper child = childServers.find { it.port == mockPort }
+        HttpServerWraper child = childServers[mockPort]
         if (!child) {
             child = new HttpServerWraper(mockPort)
-            childServers << child
+            childServers.put(mockPort, child)
         }
         return child
     }
@@ -114,7 +111,7 @@ class HttpMockServer {
             throw new RuntimeException('mock not registered')
         }
         log.info("Removing mock $name")
-        List<MockEvent> mockEvents = skipReport ? [] : childServers.collect {
+        List<MockEvent> mockEvents = skipReport ? [] : childServers.values().collect {
             it.removeMock(name)
         }.flatten() as List<MockEvent>
         mockNames.remove(name)
@@ -154,7 +151,7 @@ class HttpMockServer {
             throw new RuntimeException('mock not registered')
         }
         log.trace("Peeking mock $name")
-        List<MockEvent> mockEvents = childServers.collect { it.peekMock(name) }.flatten() as List<MockEvent>
+        List<MockEvent> mockEvents = childServers.values().collect { it.peekMock(name) }.flatten() as List<MockEvent>
         MockPeeked mockPeeked = new MockPeeked(
                 mockEvents: createMockEventReports(mockEvents)
         )
@@ -166,7 +163,7 @@ class HttpMockServer {
     }
 
     void stop() {
-        childServers.each { it.stop() }
+        childServers.values().each { it.stop() }
         httpServerWraper.stop()
     }
 }
