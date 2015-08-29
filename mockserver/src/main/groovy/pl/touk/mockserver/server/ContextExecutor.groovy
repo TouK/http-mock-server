@@ -15,12 +15,12 @@ class ContextExecutor {
 
     ContextExecutor(HttpServerWraper httpServerWraper, Mock initialMock) {
         this.httpServerWraper = httpServerWraper
-        this.path = '/' + initialMock.path
+        this.path = "/${initialMock.path}"
         this.mocks = new CopyOnWriteArrayList<>([initialMock])
         httpServerWraper.createContext(path) {
             HttpExchange ex ->
                 MockRequest request = new MockRequest(ex.requestBody.text, ex.requestHeaders, ex.requestURI)
-                log.info("Mock received input")
+                log.info('Mock received input')
                 log.debug("Request: ${request.text}")
                 for (Mock mock : mocks) {
                     try {

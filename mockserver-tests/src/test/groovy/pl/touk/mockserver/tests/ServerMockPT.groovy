@@ -19,8 +19,7 @@ import java.util.concurrent.TimeUnit
 
 class ServerMockPT extends Specification {
 
-
-    @Timeout(value = 60)
+    @Timeout(value = 90)
     def "should handle many request simultaneously"() {
         given:
             HttpClient client = HttpClients.createDefault()
@@ -28,7 +27,8 @@ class ServerMockPT extends Specification {
             RemoteMockServer controlServerClient = new RemoteMockServer("localhost", 9999)
             int requestAmount = 1000
             String[] responses = new String[requestAmount]
-            ExecutorService executorService = Executors.newFixedThreadPool(20)
+            ExecutorService executorService = Executors.newCachedThreadPool()
+        when:
             for (int i = 0; i < requestAmount; ++i) {
                 int current = i
                 executorService.submit {
@@ -45,14 +45,15 @@ class ServerMockPT extends Specification {
                     restPost.entity = new StringEntity("<request$current/>", ContentType.create("text/xml", "UTF-8"))
                     CloseableHttpResponse response = client.execute(restPost)
                     responses[current] = Util.extractStringResponse(response)
-                    assert controlServerClient.removeMock("testRest$current", false).size() == 1
+                    controlServerClient.removeMock("testRest$current", true)
                 }
             }
-        when:
-            executorService.awaitTermination(60, TimeUnit.SECONDS)
+            executorService.shutdown()
+            executorService.awaitTermination(90, TimeUnit.SECONDS)
         then:
-            responses.eachWithIndex { res, i -> assert new XmlSlurper().parseText(res).name() == "goodResponse$i" as String }
+            responses.eachWithIndex { res, i -> assert res && new XmlSlurper().parseText(res).name() == "goodResponse$i" as String }
         cleanup:
+            executorService.shutdown()
             httpMockServer.stop()
     }
 }
