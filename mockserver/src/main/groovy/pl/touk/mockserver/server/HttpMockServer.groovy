@@ -2,9 +2,13 @@ package pl.touk.mockserver.server
 
 import com.sun.net.httpserver.HttpExchange
 import groovy.util.logging.Slf4j
-import groovy.util.slurpersupport.GPathResult
-import groovy.xml.MarkupBuilder
+import pl.touk.mockserver.api.request.AddMock
+import pl.touk.mockserver.api.request.MockServerRequest
+import pl.touk.mockserver.api.request.PeekMock
+import pl.touk.mockserver.api.request.RemoveMock
+import pl.touk.mockserver.api.response.*
 
+import javax.xml.bind.JAXBContext
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.CopyOnWriteArraySet
 
@@ -17,6 +21,9 @@ class HttpMockServer {
     private final List<HttpServerWraper> childServers = new CopyOnWriteArrayList<>()
     private final Set<String> mockNames = new CopyOnWriteArraySet<>()
 
+    private static
+    final JAXBContext requestJaxbContext = JAXBContext.newInstance(AddMock.package.name, AddMock.classLoader)
+
     HttpMockServer(int port = 9999) {
         httpServerWraper = new HttpServerWraper(port)
 
@@ -26,12 +33,12 @@ class HttpMockServer {
                     if (ex.requestMethod == 'GET') {
                         listMocks(ex)
                     } else if (ex.requestMethod == 'POST') {
-                        GPathResult request = new XmlSlurper().parse(ex.requestBody)
-                        if (request.name() == 'addMock') {
+                        MockServerRequest request = requestJaxbContext.createUnmarshaller().unmarshal(ex.requestBody) as MockServerRequest
+                        if (request instanceof AddMock) {
                             addMock(request, ex)
-                        } else if (request.name() == 'removeMock') {
+                        } else if (request instanceof RemoveMock) {
                             removeMock(request, ex)
-                        } else if (request.name() == 'peekMock') {
+                        } else if (request instanceof PeekMock) {
                             peekMock(request, ex)
                         } else {
                             throw new RuntimeException('Unknown request')
@@ -46,29 +53,26 @@ class HttpMockServer {
     }
 
     void listMocks(HttpExchange ex) {
-        StringWriter sw = new StringWriter()
-        MarkupBuilder builder = new MarkupBuilder(sw)
-        builder.mocks {
-            listMocks().each {
-                Mock mock ->
-                    builder.mock {
-                        name mock.name
-                        path mock.path
-                        port mock.port
-                        predicate mock.predicateClosureText
-                        response mock.responseClosureText
-                        responseHeaders mock.responseHeadersClosureText
-                    }
-            }
-        }
-        createResponse(ex, sw.toString(), 200)
+        MockListing mockListing = new MockListing(
+                mocks: listMocks().collect {
+                    new MockReport(
+                            name: it.name,
+                            path: it.path,
+                            port: it.port,
+                            predicate: it.predicateClosureText,
+                            response: it.responseClosureText,
+                            responseHeaders: it.responseHeadersClosureText
+                    )
+                }
+        )
+        createResponse(ex, mockListing, 200)
     }
 
     Set<Mock> listMocks() {
-        return childServers.collect { it.mocks }.flatten() as TreeSet
+        return childServers.collect { it.mocks }.flatten() as TreeSet<Mock>
     }
 
-    private void addMock(GPathResult request, HttpExchange ex) {
+    private void addMock(AddMock request, HttpExchange ex) {
         String name = request.name
         if (name in mockNames) {
             throw new RuntimeException('mock already registered')
@@ -77,13 +81,13 @@ class HttpMockServer {
         HttpServerWraper child = getOrCreateChildServer(mock.port)
         child.addMock(mock)
         mockNames << name
-        createResponse(ex, '<mockAdded/>', 200)
+        createResponse(ex, new MockAdded(), 200)
     }
 
-    private static Mock mockFromRequest(GPathResult request) {
+    private static Mock mockFromRequest(AddMock request) {
         String name = request.name
         String mockPath = request.path
-        int mockPort = Integer.valueOf(request.port as String)
+        int mockPort = request.port
         Mock mock = new Mock(name, mockPath, mockPort)
         mock.predicate = request.predicate
         mock.response = request.response
@@ -103,85 +107,62 @@ class HttpMockServer {
         return child
     }
 
-    private void removeMock(GPathResult request, HttpExchange ex) {
+    private void removeMock(RemoveMock request, HttpExchange ex) {
         String name = request.name
-        boolean skipReport = Boolean.parseBoolean(request.skipReport?.toString() ?: 'false')
+        boolean skipReport = request.skipReport ?: false
         if (!(name in mockNames)) {
             throw new RuntimeException('mock not registered')
         }
         log.info("Removing mock $name")
-        List<MockEvent> mockEvents = skipReport ? [] : childServers.collect { it.removeMock(name) }.flatten()
+        List<MockEvent> mockEvents = skipReport ? [] : childServers.collect {
+            it.removeMock(name)
+        }.flatten() as List<MockEvent>
         mockNames.remove(name)
-        createResponse(ex, createMockRemovedResponse(mockEvents), 200)
+        MockRemoved mockRemoved = new MockRemoved(
+                mockEvents: createMockEventReports(mockEvents)
+        )
+        createResponse(ex, mockRemoved, 200)
     }
 
-    private void peekMock(GPathResult request, HttpExchange ex) {
+    private static List<MockEventReport> createMockEventReports(List<MockEvent> mockEvents) {
+        return mockEvents.collect {
+            new MockEventReport(
+                    request: new MockRequestReport(
+                            text: it.request.text,
+                            headers: it.request.headers.collect {
+                                new Parameter(name: it.key, value: it.value)
+                            },
+                            queryParams: it.request.query.collect {
+                                new Parameter(name: it.key, value: it.value)
+                            },
+                            paths: it.request.path
+                    ),
+                    response: new MockResponseReport(
+                            statusCode: it.response.statusCode,
+                            text: it.response.text,
+                            headers: it.response.headers.collect {
+                                new Parameter(name: it.key, value: it.value)
+                            }
+                    )
+            )
+        }
+    }
+
+    private void peekMock(PeekMock request, HttpExchange ex) {
         String name = request.name
         if (!(name in mockNames)) {
             throw new RuntimeException('mock not registered')
         }
         log.trace("Peeking mock $name")
-        List<MockEvent> mockEvents = childServers.collect { it.peekMock(name) }.flatten()
-        createResponse(ex, createMockPeekedResponse(mockEvents), 200)
-    }
-
-    private static String createMockRemovedResponse(List<MockEvent> mockEvents) {
-        StringWriter sw = new StringWriter()
-        MarkupBuilder builder = new MarkupBuilder(sw)
-        builder.mockRemoved {
-            mockEventsToXml(mockEvents, builder)
-        }
-        return sw.toString()
-    }
-
-    private static String createMockPeekedResponse(List<MockEvent> mockEvents) {
-        StringWriter sw = new StringWriter()
-        MarkupBuilder builder = new MarkupBuilder(sw)
-        builder.mockPeeked {
-            mockEventsToXml(mockEvents, builder)
-        }
-        return sw.toString()
-    }
-
-    private static void mockEventsToXml(List<MockEvent> events, MarkupBuilder builder) {
-        events.each { MockEvent event ->
-            builder.mockEvent {
-                builder.request {
-                    text event.request.text
-                    headers {
-                        event.request.headers.each {
-                            builder.param(name: it.key, it.value)
-                        }
-                    }
-                    query {
-                        event.request.query.each {
-                            builder.param(name: it.key, it.value)
-                        }
-                    }
-                    path {
-                        event.request.path.each {
-                            builder.elem it
-                        }
-                    }
-                }
-                builder.response {
-                    text event.response.text
-                    headers {
-                        event.response.headers.each {
-                            builder.param(name: it.key, it.value)
-                        }
-                    }
-                    statusCode event.response.statusCode
-                }
-            }
-        }
+        List<MockEvent> mockEvents = childServers.collect { it.peekMock(name) }.flatten() as List<MockEvent>
+        MockPeeked mockPeeked = new MockPeeked(
+                mockEvents: createMockEventReports(mockEvents)
+        )
+        createResponse(ex, mockPeeked, 200)
     }
 
     private static void createErrorResponse(HttpExchange ex, Exception e) {
-        StringWriter sw = new StringWriter()
-        MarkupBuilder builder = new MarkupBuilder(sw)
-        builder.exceptionOccured e.message
-        createResponse(ex, sw.toString(), 400)
+        createResponse(ex, new ExceptionOccured(message: e.message), 400)
     }
 
     void stop() {

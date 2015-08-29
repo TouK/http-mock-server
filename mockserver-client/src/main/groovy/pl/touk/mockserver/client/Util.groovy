@@ -7,15 +7,42 @@ import groovy.util.slurpersupport.GPathResult
 import org.apache.http.HttpEntity
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.util.EntityUtils
+import pl.touk.mockserver.api.response.ExceptionOccured
+import pl.touk.mockserver.api.response.MockAdded
+import pl.touk.mockserver.api.response.MockServerResponse
+
+import javax.xml.bind.JAXBContext
 
 @CompileStatic
 @TypeChecked
 class Util {
+    private static
+    final JAXBContext responseContext = JAXBContext.newInstance(MockAdded.package.name, MockAdded.classLoader)
+
     static GPathResult extractXmlResponse(CloseableHttpResponse response) {
+        return new XmlSlurper().parseText(extractStringResponse(response))
+    }
+    static String extractStringResponse(CloseableHttpResponse response) {
         HttpEntity entity = response.entity
-        GPathResult xml = new XmlSlurper().parseText(EntityUtils.toString(entity, 'UTF-8'))
+        String responseString = EntityUtils.toString(entity, 'UTF-8')
         EntityUtils.consumeQuietly(entity)
-        return xml
+        return responseString
+    }
+
+    static MockServerResponse extractResponse(CloseableHttpResponse response) {
+        String responseString = extractStringResponse(response)
+        if (response.statusLine.statusCode == 200) {
+            return responseContext.createUnmarshaller().unmarshal(new StringReader(responseString)) as MockServerResponse
+        }
+        ExceptionOccured exceptionOccured = responseContext.createUnmarshaller().unmarshal(new StringReader(responseString)) as ExceptionOccured
+        String message = exceptionOccured.message
+        if (message == 'mock already registered') {
+            throw new MockAlreadyExists()
+        }
+        if (message == 'mock not registered') {
+            throw new MockDoesNotExist()
+        }
+        throw new InvalidMockDefinition(message)
     }
 
     static String soap(String request) {
@@ -26,13 +53,11 @@ class Util {
     }
 
     static Object extractJsonResponse(CloseableHttpResponse response) {
-        HttpEntity entity = response.entity
-        Object json = new JsonSlurper().parseText(EntityUtils.toString(entity, 'UTF-8'))
-        EntityUtils.consumeQuietly(entity)
-        return json
+        return new JsonSlurper().parseText(extractStringResponse(response))
     }
 
     static void consumeResponse(CloseableHttpResponse response) {
         EntityUtils.consumeQuietly(response.entity)
     }
+
 }

@@ -10,6 +10,7 @@
         <module>mockserver-client</module>
         <module>mockserver</module>
         <module>mockserver-tests</module>
+        <module>mockserver-api</module>
     </modules>
 
     <properties>
@@ -22,6 +23,7 @@
         <commons-lang3.version>3.3.2</commons-lang3.version>
         <slf4j-api.version>1.7.7</slf4j-api.version>
         <logback-classic.version>1.0.13</logback-classic.version>
+        <lombok.version>1.16.6</lombok.version>
     </properties>
 
     <scm>
@@ -62,6 +64,16 @@
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
                 <version>${logback-classic.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>pl.touk.mockserver</groupId>
+                <artifactId>mockserver-api</artifactId>
+                <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

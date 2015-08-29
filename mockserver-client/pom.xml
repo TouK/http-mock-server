@@ -25,5 +25,9 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
         </dependency>
+        <dependency>
+            <groupId>pl.touk.mockserver</groupId>
+            <artifactId>mockserver-api</artifactId>
+        </dependency>
     </dependencies>
 </project>

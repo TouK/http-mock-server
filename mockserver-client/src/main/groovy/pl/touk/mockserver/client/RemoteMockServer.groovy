@@ -1,6 +1,5 @@
 package pl.touk.mockserver.client
 
-import groovy.util.slurpersupport.GPathResult
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpGet
 import org.apache.http.client.methods.HttpPost
@@ -8,112 +7,70 @@ import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
+import pl.touk.mockserver.api.request.AddMock
+import pl.touk.mockserver.api.request.MockServerRequest
+import pl.touk.mockserver.api.request.PeekMock
+import pl.touk.mockserver.api.request.RemoveMock
+import pl.touk.mockserver.api.response.*
+
+import javax.xml.bind.JAXBContext
 
 class RemoteMockServer {
     private final String address
     private final CloseableHttpClient client = HttpClients.createDefault()
+    private static final JAXBContext requestContext = JAXBContext.newInstance(AddMock.package.name, AddMock.classLoader)
+    private static
+    final JAXBContext responseContext = JAXBContext.newInstance(MockAdded.package.name, MockAdded.classLoader)
 
     RemoteMockServer(String host, int port) {
         address = "http://$host:$port/serverControl"
     }
 
-    void addMock(AddMockRequestData addMockRequestData) {
+    void addMock(AddMock addMockData) {
         HttpPost addMockPost = new HttpPost(address)
-        addMockPost.entity = buildAddMockRequest(addMockRequestData)
+        addMockPost.entity = buildAddMockRequest(addMockData)
         CloseableHttpResponse response = client.execute(addMockPost)
-        GPathResult responseXml = Util.extractXmlResponse(response)
-        if (responseXml.name() != 'mockAdded') {
-            if (responseXml.text() == 'mock already registered') {
-                throw new MockAlreadyExists()
-
-            }
-            throw new InvalidMockDefinition(responseXml.text())
-        }
+        Util.extractResponse(response)
     }
 
-    List<MockEvent> removeMock(String name, boolean skipReport = false) {
+    List<MockEventReport> removeMock(String name, boolean skipReport = false) {
         HttpPost removeMockPost = new HttpPost(address)
-        removeMockPost.entity = buildRemoveMockRequest(new RemoveMockRequestData(name: name, skipReport: skipReport))
+        removeMockPost.entity = buildRemoveMockRequest(new RemoveMock(name: name, skipReport: skipReport))
         CloseableHttpResponse response = client.execute(removeMockPost)
-        GPathResult responseXml = Util.extractXmlResponse(response)
-        if (responseXml.name() == 'mockRemoved') {
-            return responseXml.'mockEvent'.collect {
-                new MockEvent(mockRequestFromXml(it.request), mockResponseFromXml(it.response))
-            }
-        }
-        throw new MockDoesNotExist()
+        MockRemoved mockRemoved = Util.extractResponse(response) as MockRemoved
+        return mockRemoved.mockEvents ?: []
     }
 
-    List<MockEvent> peekMock(String name) {
+    List<MockEventReport> peekMock(String name) {
         HttpPost removeMockPost = new HttpPost(address)
-        removeMockPost.entity = buildPeekMockRequest(new PeekMockRequestData(name: name))
+        removeMockPost.entity = buildPeekMockRequest(new PeekMock(name: name))
         CloseableHttpResponse response = client.execute(removeMockPost)
-        GPathResult responseXml = Util.extractXmlResponse(response)
-        if (responseXml.name() == 'mockPeeked') {
-            return responseXml.'mockEvent'.collect {
-                new MockEvent(mockRequestFromXml(it.request), mockResponseFromXml(it.response))
-            }
-        }
-        throw new MockDoesNotExist()
+        MockPeeked mockPeeked = Util.extractResponse(response) as MockPeeked
+        return mockPeeked.mockEvents ?: []
     }
 
-    private static MockResponse mockResponseFromXml(GPathResult xml) {
-        return new MockResponse(xml.statusCode.text() as int, xml.text.text(), xml.headers.param.collectEntries {
-            [(it.@name.text()): it.text()]
-        })
+    private static StringEntity buildRemoveMockRequest(RemoveMock data) {
+        return new StringEntity(marshallRequest(data), ContentType.create("text/xml", "UTF-8"))
     }
 
-    private static MockRequest mockRequestFromXml(GPathResult xml) {
-        return new MockRequest(
-                xml.text.text(),
-                xml.headers.param.collectEntries { [(it.@name.text()): it.text()] },
-                xml.query.param.collectEntries { [(it.@name.text()): it.text()] },
-                xml.path.elem*.text()
-        )
+    private static String marshallRequest(MockServerRequest data) {
+        StringWriter sw = new StringWriter()
+        requestContext.createMarshaller().marshal(data, sw)
+        return sw.toString()
     }
 
-    private static StringEntity buildRemoveMockRequest(RemoveMockRequestData data) {
-        return new StringEntity("""\
-            <removeMock>
-                <name>${data.name}</name>
-                <skipReport>${data.skipReport}</skipReport>
-            </removeMock>
-        """, ContentType.create("text/xml", "UTF-8"))
+    private static StringEntity buildPeekMockRequest(PeekMock peekMock) {
+        return new StringEntity(marshallRequest(peekMock), ContentType.create("text/xml", "UTF-8"))
     }
 
-    private static StringEntity buildPeekMockRequest(PeekMockRequestData data) {
-        return new StringEntity("""\
-            <peekMock>
-                <name>${data.name}</name>
-            </peekMock>
-        """, ContentType.create("text/xml", "UTF-8"))
+    private static StringEntity buildAddMockRequest(AddMock data) {
+        return new StringEntity(marshallRequest(data), ContentType.create("text/xml", "UTF-8"))
     }
 
-    private static StringEntity buildAddMockRequest(AddMockRequestData data) {
-        return new StringEntity("""\
-            <addMock>
-                <name>${data.name}</name>
-                <path>${data.path}</path>
-                <port>${data.port}</port>
-                ${data.predicate ? "<predicate>${data.predicate}</predicate>" : ''}
-                ${data.response ? "<response>${data.response}</response>" : ''}
-                ${data.soap != null ? "<soap>${data.soap}</soap>" : ''}
-                ${data.statusCode ? "<statusCode>${data.statusCode}</statusCode>" : ''}
-                ${data.method ? "<method>${data.method}</method>" : ''}
-                ${data.responseHeaders ? "<responseHeaders>${data.responseHeaders}</responseHeaders>" : ''}
-            </addMock>
-        """, ContentType.create("text/xml", "UTF-8"))
-    }
-
-    List<RegisteredMock> listMocks() {
+    List<MockReport> listMocks() {
         HttpGet get = new HttpGet(address)
         CloseableHttpResponse response = client.execute(get)
-        GPathResult xml = Util.extractXmlResponse(response)
-        if (xml.name() == 'mocks') {
-            return xml.mock.collect {
-                new RegisteredMock(it.name.text(), it.path.text(), it.port.text() as int, it.predicate.text(), it.response.text(), it.responseHeaders.text())
-            }
-        }
-        return []
+        MockListing mockListing = Util.extractResponse(response) as MockListing
+        return mockListing.mocks
     }
 }

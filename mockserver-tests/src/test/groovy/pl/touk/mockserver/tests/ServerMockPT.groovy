@@ -1,34 +1,40 @@
 package pl.touk.mockserver.tests
 
-import groovy.util.slurpersupport.GPathResult
 import org.apache.http.client.HttpClient
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.HttpClients
-import pl.touk.mockserver.client.AddMockRequestData
+import pl.touk.mockserver.api.request.AddMock
 import pl.touk.mockserver.client.RemoteMockServer
 import pl.touk.mockserver.client.Util
 import pl.touk.mockserver.server.HttpMockServer
 import spock.lang.Specification
+import spock.lang.Timeout
+
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 
 class ServerMockPT extends Specification {
 
+
+    @Timeout(value = 60)
     def "should handle many request simultaneously"() {
         given:
+            HttpClient client = HttpClients.createDefault()
             HttpMockServer httpMockServer = new HttpMockServer()
             RemoteMockServer controlServerClient = new RemoteMockServer("localhost", 9999)
-            HttpClient client = HttpClients.createDefault()
             int requestAmount = 1000
-            GPathResult[] responses = new GPathResult[requestAmount]
-            Thread[] threads = new Thread[requestAmount]
+            String[] responses = new String[requestAmount]
+            ExecutorService executorService = Executors.newFixedThreadPool(20)
             for (int i = 0; i < requestAmount; ++i) {
                 int current = i
-                threads[i] = new Thread({
+                executorService.submit {
                     int endpointNumber = current % 10
                     int port = 9000 + (current % 7)
-                    controlServerClient.addMock(new AddMockRequestData(
+                    controlServerClient.addMock(new AddMock(
                             name: "testRest$current",
                             path: "testEndpoint$endpointNumber",
                             port: port,
@@ -38,15 +44,14 @@ class ServerMockPT extends Specification {
                     HttpPost restPost = new HttpPost("http://localhost:$port/testEndpoint$endpointNumber")
                     restPost.entity = new StringEntity("<request$current/>", ContentType.create("text/xml", "UTF-8"))
                     CloseableHttpResponse response = client.execute(restPost)
-                    responses[current] = Util.extractXmlResponse(response)
-                    assert controlServerClient.removeMock("testRest$current").size() == 1
-                })
+                    responses[current] = Util.extractStringResponse(response)
+                    assert controlServerClient.removeMock("testRest$current", false).size() == 1
+                }
             }
         when:
-            threads*.start()
-            Thread.sleep(60000)
+            executorService.awaitTermination(60, TimeUnit.SECONDS)
         then:
-            responses.eachWithIndex { res, i -> assert res.name() == "goodResponse$i" }
+            responses.eachWithIndex { res, i -> assert new XmlSlurper().parseText(res).name() == "goodResponse$i" as String }
         cleanup:
             httpMockServer.stop()
     }
