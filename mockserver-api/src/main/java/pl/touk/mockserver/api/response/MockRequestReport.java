@@ -11,14 +11,14 @@ public class MockRequestReport {
     private String text;
 
     @XmlElementWrapper(name = "headers")
-    @XmlElement(name = "param")
+    @XmlElement(name = "header")
     private List<Parameter> headers;
 
-    @XmlElementWrapper(name = "query")
-    @XmlElement(name = "param")
+    @XmlElementWrapper(name = "queryParams")
+    @XmlElement(name = "queryParam")
     private List<Parameter> queryParams;
 
     @XmlElementWrapper(name = "path")
-    @XmlElement(name = "elem")
+    @XmlElement(name = "pathPart")
     private List<String> paths;
 }

@@ -14,6 +14,6 @@ public class MockResponseReport {
     private String text;
 
     @XmlElementWrapper(name = "headers")
-    @XmlElement(name = "param")
+    @XmlElement(name = "header")
     private List<Parameter> headers;
 }
