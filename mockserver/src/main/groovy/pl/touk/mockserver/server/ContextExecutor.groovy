@@ -3,7 +3,7 @@ package pl.touk.mockserver.server
 import com.sun.net.httpserver.HttpExchange
 import groovy.transform.PackageScope
 import groovy.util.logging.Slf4j
-import pl.touk.mockserver.api.request.Method
+import pl.touk.mockserver.api.common.Method
 
 import java.util.concurrent.CopyOnWriteArrayList
 

@@ -2,7 +2,10 @@ package pl.touk.mockserver.server
 
 import com.sun.net.httpserver.HttpExchange
 import groovy.util.logging.Slf4j
-import pl.touk.mockserver.api.request.*
+import pl.touk.mockserver.api.request.AddMock
+import pl.touk.mockserver.api.request.MockServerRequest
+import pl.touk.mockserver.api.request.PeekMock
+import pl.touk.mockserver.api.request.RemoveMock
 import pl.touk.mockserver.api.response.*
 
 import javax.xml.bind.JAXBContext
@@ -50,7 +53,7 @@ class HttpMockServer {
     }
 
     void listMocks(HttpExchange ex) {
-        MockListing mockListing = new MockListing(
+        Mocks mockListing = new Mocks(
                 mocks: listMocks().collect {
                     new MockReport(
                             name: it.name,
@@ -126,20 +129,20 @@ class HttpMockServer {
             new MockEventReport(
                     request: new MockRequestReport(
                             text: it.request.text,
-                            headers: it.request.headers.collect {
+                            headers: new MockRequestReport.Headers(headers: it.request.headers.collect {
                                 new Parameter(name: it.key, value: it.value)
-                            },
-                            queryParams: it.request.query.collect {
+                            }),
+                            queryParams: new MockRequestReport.QueryParams(queryParams: it.request.query.collect {
                                 new Parameter(name: it.key, value: it.value)
-                            },
-                            paths: it.request.path
+                            }),
+                            path: new MockRequestReport.Path(pathParts:  it.request.path)
                     ),
                     response: new MockResponseReport(
                             statusCode: it.response.statusCode,
                             text: it.response.text,
-                            headers: it.response.headers.collect {
+                            headers: new MockResponseReport.Headers(headers:  it.response.headers.collect {
                                 new Parameter(name: it.key, value: it.value)
-                            }
+                            })
                     )
             )
         }
@@ -159,7 +162,7 @@ class HttpMockServer {
     }
 
     private static void createErrorResponse(HttpExchange ex, Exception e) {
-        createResponse(ex, new ExceptionOccured(message: e.message), 400)
+        createResponse(ex, new ExceptionOccured(value: e.message), 400)
     }
 
     void stop() {

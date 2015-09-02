@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema elementFormDefault="qualified" version="1.0" targetNamespace="http://touk.pl/mockserver/api/response" xmlns:tns="http://touk.pl/mockserver/api/response" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:common="http://touk.pl/mockserver/api/common">
+
+  <xs:import namespace="http://touk.pl/mockserver/api/common" schemaLocation="common.xsd"/>
+
+  <xs:element name="exceptionOccured" type="tns:exceptionOccured"/>
+
+  <xs:element name="mockAdded" type="tns:mockAdded"/>
+
+  <xs:element name="mockPeeked" type="tns:mockPeeked"/>
+
+  <xs:element name="mockRemoved" type="tns:mockRemoved"/>
+
+  <xs:element name="mocks" type="tns:mockListing"/>
+
+  <xs:complexType name="exceptionOccured">
+    <xs:simpleContent>
+      <xs:extension base="xs:string"/>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="mockAdded">
+    <xs:complexContent>
+      <xs:extension base="tns:mockServerResponse">
+        <xs:sequence/>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="mockServerResponse" abstract="true">
+    <xs:sequence/>
+  </xs:complexType>
+
+  <xs:complexType name="mockEventReport">
+    <xs:sequence>
+      <xs:element name="request" type="tns:mockRequestReport"/>
+      <xs:element name="response" type="tns:mockResponseReport"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="mockRequestReport">
+    <xs:sequence>
+      <xs:element name="text" type="xs:string" minOccurs="0"/>
+      <xs:element name="headers" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="header" type="tns:parameter" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="queryParams" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="queryParam" type="tns:parameter" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+      <xs:element name="path" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="pathPart" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="parameter">
+    <xs:simpleContent>
+      <xs:extension base="xs:string">
+        <xs:attribute name="name" type="xs:string" use="required"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+
+  <xs:complexType name="mockResponseReport">
+    <xs:sequence>
+      <xs:element name="statusCode" type="xs:int"/>
+      <xs:element name="text" type="xs:string" minOccurs="0"/>
+      <xs:element name="headers" minOccurs="0">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="header" type="tns:parameter" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="mockListing">
+    <xs:complexContent>
+      <xs:extension base="tns:mockServerResponse">
+        <xs:sequence>
+          <xs:element name="mock" type="tns:mockReport" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="mockReport">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string"/>
+      <xs:element name="path" type="xs:string"/>
+      <xs:element name="port" type="xs:int"/>
+      <xs:element name="predicate" type="xs:string"/>
+      <xs:element name="response" type="xs:string"/>
+      <xs:element name="responseHeaders" type="xs:string"/>
+      <xs:element name="soap" type="xs:boolean"/>
+      <xs:element name="method" type="common:method"/>
+      <xs:element name="statusCode" type="xs:int"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="mockPeeked">
+    <xs:complexContent>
+      <xs:extension base="tns:mockServerResponse">
+        <xs:sequence>
+          <xs:element name="mockEvent" type="tns:mockEventReport" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="mockRemoved">
+    <xs:complexContent>
+      <xs:extension base="tns:mockServerResponse">
+        <xs:sequence>
+          <xs:element name="mockEvent" type="tns:mockEventReport" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+</xs:schema>
+

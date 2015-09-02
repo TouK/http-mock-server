@@ -35,7 +35,7 @@ class Util {
             return responseContext.createUnmarshaller().unmarshal(new StringReader(responseString)) as MockServerResponse
         }
         ExceptionOccured exceptionOccured = responseContext.createUnmarshaller().unmarshal(new StringReader(responseString)) as ExceptionOccured
-        String message = exceptionOccured.message
+        String message = exceptionOccured.value
         if (message == 'mock already registered') {
             throw new MockAlreadyExists()
         }

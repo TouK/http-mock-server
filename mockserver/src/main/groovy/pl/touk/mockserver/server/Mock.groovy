@@ -3,7 +3,7 @@ package pl.touk.mockserver.server
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.PackageScope
 import groovy.util.logging.Slf4j
-import pl.touk.mockserver.api.request.Method
+import pl.touk.mockserver.api.common.Method
 
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -79,10 +79,8 @@ class Mock implements Comparable<Mock> {
         }
     }
 
-    void setSoap(String soap) {
-        if (soap) {
-            this.soap = Boolean.valueOf(soap)
-        }
+    void setSoap(Boolean soap) {
+        this.soap = soap ?: false
     }
 
     void setStatusCode(String statusCode) {

@@ -8,7 +8,7 @@ import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
 import pl.touk.mockserver.api.request.AddMock
-import pl.touk.mockserver.api.request.Method
+import pl.touk.mockserver.api.common.Method
 import pl.touk.mockserver.api.response.MockEventReport
 import pl.touk.mockserver.api.response.MockReport
 import pl.touk.mockserver.api.response.Parameter
@@ -637,14 +637,21 @@ class MockServerIntegrationTest extends Specification {
                     port: 9999
             ))
             remoteMockServer.removeMock('testRest5')
-        expect:
-            remoteMockServer.listMocks() == [
-                    new MockReport(name: 'testRest', path: 'testEndpoint', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: false, statusCode: 200, method: Method.POST),
-                    new MockReport(name: 'testRest2', path: 'testEndpoint', port: 9998, predicate: '''{ req -> req.xml.name() == 'request1'}''', response: '''{ req -> '<response/>' }''', responseHeaders: '{ _ -> [a: "b"] }', soap: false, statusCode: 200, method: Method.POST),
-                    new MockReport(name: 'testRest3', path: 'testEndpoint2', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: false, statusCode: 200, method: Method.POST),
-                    new MockReport(name: 'testRest4', path: 'testEndpoint', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: true, statusCode: 204, method: Method.PUT),
-                    new MockReport(name: 'testRest6', path: 'testEndpoint2', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: false, statusCode: 200, method: Method.POST)
-            ]
+        when:
+            List<MockReport> mockReport = remoteMockServer.listMocks()
+        then:
+            mockReport.size() == 5
+            assertMockReport(mockReport[0], [name:'testRest', path: 'testEndpoint', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: false, statusCode: 200, method: Method.POST])
+            assertMockReport(mockReport[1], [name: 'testRest2', path: 'testEndpoint', port: 9998, predicate: '''{ req -> req.xml.name() == 'request1'}''', response: '''{ req -> '<response/>' }''', responseHeaders: '{ _ -> [a: "b"] }', soap: false, statusCode: 200, method: Method.POST])
+            assertMockReport(mockReport[2], [name: 'testRest3', path: 'testEndpoint2', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: false, statusCode: 200, method: Method.POST])
+            assertMockReport(mockReport[3], [name: 'testRest4', path: 'testEndpoint', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: true, statusCode: 204, method: Method.PUT])
+            assertMockReport(mockReport[4], [name: 'testRest6', path: 'testEndpoint2', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: false, statusCode: 200, method: Method.POST])
+    }
+
+    private void assertMockReport( MockReport mockReport, Map<String, Object> props) {
+        props.each {
+            assert mockReport."${it.key}" == it.value
+        }
     }
 
     def "should add mock accepts path certain path params"() {
@@ -718,18 +725,18 @@ class MockServerIntegrationTest extends Specification {
         then:
             mockEvents1.size() == 2
             mockEvents1[0].request.text == '<request/>'
-            !mockEvents1[0].request.headers?.empty
-            mockEvents1[0].request.queryParams == []
-            mockEvents1[0].request.paths == ['testEndpoint']
-            !mockEvents1[0].response.headers?.empty
+            !mockEvents1[0].request.headers?.headers?.empty
+            mockEvents1[0].request.queryParams.queryParams == []
+            mockEvents1[0].request.path.pathParts == ['testEndpoint']
+            !mockEvents1[0].response.headers?.headers?.empty
             mockEvents1[0].response.text == '<goodResponseRest-request/>'
             mockEvents1[0].response.statusCode == 201
 
             mockEvents1[1].request.text == '<request15/>'
-            !mockEvents1[1].request.headers?.empty
-            mockEvents1[1].request.queryParams == []
-            mockEvents1[1].request.paths == ['testEndpoint', 'hello']
-            !mockEvents1[1].response.headers?.empty
+            !mockEvents1[1].request.headers?.headers?.empty
+            mockEvents1[1].request.queryParams.queryParams == []
+            mockEvents1[1].request.path.pathParts == ['testEndpoint', 'hello']
+            !mockEvents1[1].response.headers?.headers?.empty
             mockEvents1[1].response.text == '<goodResponseRest-request15/>'
             mockEvents1[1].response.statusCode == 201
         when:
@@ -737,10 +744,10 @@ class MockServerIntegrationTest extends Specification {
         then:
             mockEvents2.size() == 1
             mockEvents2[0].request.text == '<reqXYZ/>'
-            !mockEvents2[0].request.headers?.empty
-            mockEvents2[0].request.queryParams == [new Parameter(name: 'id', value: '123')]
-            mockEvents2[0].request.paths == ['testEndpoint']
-            mockEvents2[0].response.headers.find { it.name == 'aaa' }?.value == '15'
+            !mockEvents2[0].request.headers?.headers?.empty
+            mockEvents2[0].request.queryParams.queryParams.find { it.name == 'id' }?.value == '123'
+            mockEvents2[0].request.path.pathParts == ['testEndpoint']
+            mockEvents2[0].response.headers.headers.find { it.name == 'aaa' }?.value == '15'
             mockEvents2[0].response.text == '<goodResponseRest/>'
             mockEvents2[0].response.statusCode == 202
     }
@@ -793,18 +800,18 @@ class MockServerIntegrationTest extends Specification {
         then:
             mockEvents1.size() == 2
             mockEvents1[0].request.text == '<request/>'
-            !mockEvents1[0].request.headers?.empty
-            mockEvents1[0].request.queryParams == []
-            mockEvents1[0].request.paths == ['testEndpoint']
-            !mockEvents1[0].response.headers?.empty
+            !mockEvents1[0].request.headers?.headers?.empty
+            mockEvents1[0].request.queryParams.queryParams == []
+            mockEvents1[0].request.path.pathParts == ['testEndpoint']
+            !mockEvents1[0].response.headers?.headers?.empty
             mockEvents1[0].response.text == '<goodResponseRest-request/>'
             mockEvents1[0].response.statusCode == 201
 
             mockEvents1[1].request.text == '<request15/>'
-            !mockEvents1[1].request.headers?.empty
-            mockEvents1[1].request.queryParams == []
-            mockEvents1[1].request.paths == ['testEndpoint', 'hello']
-            !mockEvents1[1].response.headers?.empty
+            !mockEvents1[1].request.headers?.headers?.empty
+            mockEvents1[1].request.queryParams.queryParams == []
+            mockEvents1[1].request.path.pathParts == ['testEndpoint', 'hello']
+            !mockEvents1[1].response.headers?.headers?.empty
             mockEvents1[1].response.text == '<goodResponseRest-request15/>'
             mockEvents1[1].response.statusCode == 201
         when:
@@ -812,10 +819,10 @@ class MockServerIntegrationTest extends Specification {
         then:
             mockEvents2.size() == 1
             mockEvents2[0].request.text == '<reqXYZ/>'
-            !mockEvents2[0].request.headers?.empty
-            mockEvents2[0].request.queryParams == [new Parameter(name: 'id', value: '123')]
-            mockEvents2[0].request.paths == ['testEndpoint']
-            mockEvents2[0].response.headers.find {it.name == 'aaa'}?.value == '15'
+            !mockEvents2[0].request.headers?.headers?.empty
+            mockEvents2[0].request.queryParams.queryParams.find{it.name == 'id'}?.value == '123'
+            mockEvents2[0].request.path.pathParts == ['testEndpoint']
+            mockEvents2[0].response.headers.headers.find {it.name == 'aaa'}?.value == '15'
             mockEvents2[0].response.text == '<goodResponseRest/>'
             mockEvents2[0].response.statusCode == 202
     }

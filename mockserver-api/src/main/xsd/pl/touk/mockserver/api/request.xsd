@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema elementFormDefault="qualified" version="1.0" targetNamespace="http://touk.pl/mockserver/api/request" xmlns:tns="http://touk.pl/mockserver/api/request" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:common="http://touk.pl/mockserver/api/common">
+
+  <xs:import namespace="http://touk.pl/mockserver/api/common" schemaLocation="common.xsd"/>
+
+  <xs:element name="addMock" type="tns:AddMock"/>
+
+  <xs:element name="peekMock" type="tns:PeekMock"/>
+
+  <xs:element name="removeMock" type="tns:RemoveMock"/>
+
+  <xs:complexType name="AddMock">
+    <xs:complexContent>
+      <xs:extension base="tns:mockServerRequest">
+        <xs:sequence>
+          <xs:element name="path" type="xs:string"/>
+          <xs:element name="port" type="xs:int"/>
+          <xs:element name="predicate" type="xs:string" minOccurs="0"/>
+          <xs:element name="response" type="xs:string" minOccurs="0"/>
+          <xs:element name="soap" type="xs:boolean" minOccurs="0"/>
+          <xs:element name="statusCode" type="xs:int" minOccurs="0"/>
+          <xs:element name="method" type="common:method" minOccurs="0"/>
+          <xs:element name="responseHeaders" type="xs:string" minOccurs="0"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="mockServerRequest" abstract="true">
+    <xs:sequence>
+      <xs:element name="name" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="PeekMock">
+    <xs:complexContent>
+      <xs:extension base="tns:mockServerRequest"/>
+    </xs:complexContent>
+  </xs:complexType>
+
+  <xs:complexType name="RemoveMock">
+    <xs:complexContent>
+      <xs:extension base="tns:mockServerRequest">
+        <xs:sequence>
+          <xs:element name="skipReport" type="xs:boolean" minOccurs="0"/>
+        </xs:sequence>
+      </xs:extension>
+    </xs:complexContent>
+  </xs:complexType>
+</xs:schema>
+

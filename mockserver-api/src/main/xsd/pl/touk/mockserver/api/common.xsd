@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<xs:schema version="1.0" targetNamespace="http://touk.pl/mockserver/api/common" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+  <xs:simpleType name="method">
+    <xs:restriction base="xs:string">
+      <xs:enumeration value="POST"/>
+      <xs:enumeration value="GET"/>
+      <xs:enumeration value="DELETE"/>
+      <xs:enumeration value="PUT"/>
+      <xs:enumeration value="TRACE"/>
+      <xs:enumeration value="HEAD"/>
+      <xs:enumeration value="OPTIONS"/>
+      <xs:enumeration value="PATCH"/>
+    </xs:restriction>
+  </xs:simpleType>
+</xs:schema>
+

@@ -18,9 +18,7 @@ import javax.xml.bind.JAXBContext
 class RemoteMockServer {
     private final String address
     private final CloseableHttpClient client = HttpClients.createDefault()
-    private static final JAXBContext requestContext = JAXBContext.newInstance(AddMock.package.name, AddMock.classLoader)
-    private static
-    final JAXBContext responseContext = JAXBContext.newInstance(MockAdded.package.name, MockAdded.classLoader)
+    private static final JAXBContext requestContext = JAXBContext.newInstance(AddMock, PeekMock, RemoveMock)
 
     RemoteMockServer(String host, int port) {
         address = "http://$host:$port/serverControl"
@@ -70,7 +68,7 @@ class RemoteMockServer {
     List<MockReport> listMocks() {
         HttpGet get = new HttpGet(address)
         CloseableHttpResponse response = client.execute(get)
-        MockListing mockListing = Util.extractResponse(response) as MockListing
-        return mockListing.mocks
+        Mocks mocks = Util.extractResponse(response) as Mocks
+        return mocks.mocks
     }
 }
