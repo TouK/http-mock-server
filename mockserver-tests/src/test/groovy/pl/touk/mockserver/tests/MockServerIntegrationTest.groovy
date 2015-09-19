@@ -839,4 +839,31 @@ class MockServerIntegrationTest extends Specification {
             false      | 1
             true       | 0
     }
+
+    @Unroll
+    def "should reject mock when it has System.exit in closure"() {
+        when:
+            remoteMockServer.addMock(new AddMockRequestData(
+                    name: 'testRest',
+                    path: 'testEndpoint',
+                    port: 9999,
+                    predicate: predicate,
+                    response: '''{req -> "<goodResponseRest-${req.xml.name()}/>"}''',
+                    soap: false
+            ))
+        then:
+            thrown(InvalidMockDefinition)
+        expect:
+            remoteMockServer.listMocks() == []
+        where:
+            predicate << [
+                    '''{req -> System.exit(-1); req.xml.name() == 'request'}''',
+                    '''{req -> System     .exit(-1); req.xml.name() == 'request'}''',
+                    '''{req -> System
+
+                        .exit(-1); req.xml.name() == 'request'}''',
+                    '''{req -> System.    exit(-1); req.xml.name() == 'request'}''',
+                    '''{req -> System.exit   (-1); req.xml.name() == 'request'}'''
+            ]
+    }
 }

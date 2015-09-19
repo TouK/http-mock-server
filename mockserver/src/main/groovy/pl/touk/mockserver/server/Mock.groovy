@@ -18,7 +18,7 @@ class Mock implements Comparable<Mock> {
     String responseHeadersClosureText = '{ _ -> [:] }'
     Closure predicate = toClosure(predicateClosureText)
     Closure response = toClosure(responseClosureText)
-    Closure responseHeaders =toClosure(responseHeadersClosureText)
+    Closure responseHeaders = toClosure(responseHeadersClosureText)
     boolean soap = false
     int statusCode = 200
     String method = 'POST'
@@ -64,6 +64,9 @@ class Mock implements Comparable<Mock> {
     }
 
     private Closure toClosure(String predicate) {
+        if (predicate ==~ /(?m).*System\s*\.\s*exit\s*\(.*/) {
+            throw new RuntimeException('System.exit is forbidden')
+        }
         GroovyShell sh = new GroovyShell(this.class.classLoader);
         return sh.evaluate(predicate) as Closure
     }
