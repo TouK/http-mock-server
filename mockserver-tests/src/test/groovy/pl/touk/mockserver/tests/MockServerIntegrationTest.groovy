@@ -858,7 +858,7 @@ class MockServerIntegrationTest extends Specification {
     @Unroll
     def "should reject mock when it has System.exit in closure"() {
         when:
-            remoteMockServer.addMock(new AddMockRequestData(
+            remoteMockServer.addMock(new AddMock(
                     name: 'testRest',
                     path: 'testEndpoint',
                     port: 9999,
