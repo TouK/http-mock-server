@@ -18,7 +18,7 @@ java -jar mockserver-<VERSION>-jar-with-dependencies.jar  [PORT]
 
 ```java
 RemoteMockServer remoteMockServer = new RemoteMockServer('localhost', <PORT>)
-remoteMockServer.addMock(new AddMockRequestData(
+remoteMockServer.addMock(new AddMock(
                     name: '...',
                     path: '...',
                     port: ...,
@@ -35,7 +35,7 @@ or via sending POST request to localhost:<PORT>/serverControl
 
 
 ```xml
-<addMock>
+<addMock xmlns="http://touk.pl/mockserver/api/request">
     <name>...</name>
     <path>...</path>
     <port>...</port>
@@ -72,13 +72,13 @@ In closures input parameter (called req) contains properties:
 Response if success:
 
 ```xml
-<mockAdded/>
+<mockAdded xmlns="http://touk.pl/mockserver/api/response"/>
 ```
 
 Response with error message if failure:
 
 ```xml
-<exceptionOccured>...</exceptionOccured>
+<exceptionOccured xmlns="http://touk.pl/mockserver/api/response">...</exceptionOccured>
 ```
 
 ## Mock could be peeked to get get report of its invocations.
@@ -91,61 +91,60 @@ List<MockEvent> mockEvents = remoteMockServer.peekMock('...')
 Via sending POST request to localhost:<PORT>/serverControl
 
 ```xml
-<peekMock>
-    <name>...</name>
+<peekMock xmlns="http://touk.pl/mockserver/api/request">
+  <name>...</name>
 </peekMock>
 ```
 
 Response if success:
 
 ```xml
-<mockPeeked>
+<mockPeeked xmlns="http://touk.pl/mockserver/api/response">
   <mockEvent>
     <request>
       <text>...</text>
       <headers>
-        <param name='...'>...</param>
+        <header name="...">...</header>
         ...
       </headers>
-      <query>
-        <param name='...'>...</param>
+      <queryParams>
+        <queryParam name="...">...</queryParam>
         ...
-      </query>
+      </queryParams>
       <path>
-        <elem>...</elem>
+        <pathPart>...</pathPart>
         ...
       </path>
     </request>
     <response>
+      <statusCode>...</statusCode>
       <text>...</text>
       <headers>
-        <param name='...'>...</param>
+        <header name="...">...</header>
         ...
       </headers>
-      <statusCode>...</statusCode>
     </response>
   </mockEvent>
-  ...
 </mockPeeked>
 ```
 
 Response with error message if failure:
 
 ```xml
-<exceptionOccured>...</exceptionOccured>
+<exceptionOccured xmlns="http://touk.pl/mockserver/api/response">...</exceptionOccured>
 ```
 
-## When mock was used it could be unregistered by name. It also returns report of mock invocations.
+## When mock was used it could be unregistered by name. It also optionally returns report of mock invocations if second parameter is true.
 Via client:
 
 ```java
-List<MockEvent> mockEvents = remoteMockServer.removeMock('...')
+List<MockEvent> mockEvents = remoteMockServer.removeMock('...', ...)
 ```
 
 Via sending POST request to localhost:<PORT>/serverControl
 
 ```xml
-<removeMock>
+<removeMock xmlns="http://touk.pl/mockserver/api/request">
     <name>...</name>
     <skipReport>...</skipReport>
 </removeMock>
@@ -154,47 +153,46 @@ Via sending POST request to localhost:<PORT>/serverControl
 Response if success (and skipReport not given or equal false):
 
 ```xml
-<mockRemoved>
+<mockRemoved xmlns="http://touk.pl/mockserver/api/response">
   <mockEvent>
     <request>
       <text>...</text>
       <headers>
-        <param name='...'>...</param>
+        <header name="...">...</header>
         ...
       </headers>
-      <query>
-        <param name='...'>...</param>
+      <queryParams>
+        <queryParam name="...">...</queryParam>
         ...
-      </query>
+      </queryParams>
       <path>
-        <elem>...</elem>
+        <pathPart>...</pathPart>
         ...
       </path>
     </request>
     <response>
+      <statusCode>...</statusCode>
       <text>...</text>
       <headers>
-        <param name='...'>...</param>
+        <header name="...">...</header>
         ...
       </headers>
-      <statusCode>...</statusCode>
     </response>
   </mockEvent>
-  ...
 </mockRemoved>
 ```
 
 If skipReport is set to true then response will be:
 
 ```xml
-<mockRemoved/>
+<mockRemoved xmlns="http://touk.pl/mockserver/api/response"/>
 ```
 
 
 Response with error message if failure:
 
 ```xml
-<exceptionOccured>...</exceptionOccured>
+<exceptionOccured xmlns="http://touk.pl/mockserver/api/response">...</exceptionOccured>
 ```
 
 
@@ -215,6 +213,12 @@ Response:
     <name>...</name>
     <path>...</path>
     <port>...</port>
+    <predicate>...</predicate>
+    <response>...</response>
+    <responseHeaders>...</responseHeaders>
+    <soap>...</soap>
+    <method>...</method>
+    <statusCode>...</statusCode>
   </mock>
   ...
 </mocks>
