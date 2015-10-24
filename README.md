@@ -11,11 +11,22 @@ mvn clean package assembly:single
 
 ## Start server
 
+### Native start
+
 ```
 java -jar mockserver.jar  [PORT]
 ```
 
 Default port is 9999.
+
+### Start with docker
+
+Docker and docker-compose is needed.
+
+```
+./buildImage.sh
+docker-compose up -d
+```
 
 ## Create mock on server
 
