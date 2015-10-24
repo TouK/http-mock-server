@@ -242,3 +242,24 @@ Response:
   ...
 </mocks>
 ```
+
+## Remote repository
+
+Mockserver is available at `philanthropist.touk.pl`.
+
+Just add repository to maven pom:
+
+```xml
+<project>
+    ...
+    <repositories>
+        ...
+        <repository>
+            <id>touk</id>
+            <url>https://philanthropist.touk.pl/nexus/content/repositories/releases</url>
+        </repository>
+    ...
+    </repositories>
+    ...
+</project>
+```
