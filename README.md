@@ -2,19 +2,24 @@
 
 # HTTP MOCK SERVER
 
-## Create server jar (in mockserver directory)
+## Create server jar
 
 ```
+cd mockserver
 mvn clean package assembly:single
 ```
 
-## Start server on port (default 9999)
+## Start server
 
 ```
 java -jar mockserver-<VERSION>-jar-with-dependencies.jar  [PORT]
 ```
 
-## Create mock on server via client
+Default port is 9999.
+
+## Create mock on server
+
+### Via client
 
 ```java
 RemoteMockServer remoteMockServer = new RemoteMockServer('localhost', <PORT>)
@@ -27,11 +32,13 @@ remoteMockServer.addMock(new AddMock(
                     soap: ...,
                     statusCode: ...,
                     method: ...,
-                    responseHeaders: ...
+                    responseHeaders: ...,
+                    schema: ...
             ))
 ```
-  
-or via sending POST request to localhost:<PORT>/serverControl
+### Via HTTP
+
+Send POST request to localhost:<PORT>/serverControl
 
 
 ```xml
@@ -45,8 +52,11 @@ or via sending POST request to localhost:<PORT>/serverControl
     <statusCode>...</statusCode>
     <method>...</method>
     <responseHeaders>...</responseHeaders>
+    <schema>...</schema>
 </addMock>
 ```
+
+### Parameters
 
 * name - name of mock, must be unique
 * path - path on which mock should be created
@@ -57,9 +67,11 @@ or via sending POST request to localhost:<PORT>/serverControl
 * statusCode - integer, status code of response when predicate is satisfied, default 200
 * method - POST|PUT|DELETE|GET|TRACE|OPTION|HEAD, expected http method of request, default POST
 * responseHeaders - groovyClosure as string which must evaluate to Map which will be added to response headers, default { _ -> [:] }
+* schema - path to xsd schema file on mockserver classpath; default empty, so no vallidation of request is performed; if validation fails then response has got status 400 and response is raw message from validator
+
+### Closures request properties
 
 In closures input parameter (called req) contains properties:
-
 
 * text - request body as java.util.String
 * headers - java.util.Map with request headers
@@ -67,7 +79,7 @@ In closures input parameter (called req) contains properties:
 * xml - groovy.util.slurpersupport.GPathResult created from request body (if request body is valid xml)
 * soap - groovy.util.slurpersupport.GPathResult created from request body without Envelope and Body elements (if request body is valid soap xml)
 * json - java.lang.Object created from request body (if request body is valid json)
-* path - java.util.List<String> with not empty parts of request path 
+* path - java.util.List<String> with not empty parts of request path
 
 Response if success:
 
@@ -81,14 +93,17 @@ Response with error message if failure:
 <exceptionOccured xmlns="http://touk.pl/mockserver/api/response">...</exceptionOccured>
 ```
 
-## Mock could be peeked to get get report of its invocations.
-Via client:
+## Peek mock
+Mock could be peeked to get get report of its invocations.
+
+### Via client
 
 ```java
 List<MockEvent> mockEvents = remoteMockServer.peekMock('...')
 ```
 
-Via sending POST request to localhost:<PORT>/serverControl
+### Via HTTP
+Send POST request to localhost:<PORT>/serverControl
 
 ```xml
 <peekMock xmlns="http://touk.pl/mockserver/api/request">
@@ -134,14 +149,17 @@ Response with error message if failure:
 <exceptionOccured xmlns="http://touk.pl/mockserver/api/response">...</exceptionOccured>
 ```
 
-## When mock was used it could be unregistered by name. It also optionally returns report of mock invocations if second parameter is true.
-Via client:
+## Remove mock
+
+When mock was used it could be unregistered by name. It also optionally returns report of mock invocations if second parameter is true.
+
+### Via client
 
 ```java
 List<MockEvent> mockEvents = remoteMockServer.removeMock('...', ...)
 ```
-
-Via sending POST request to localhost:<PORT>/serverControl
+### Via HTTP
+Send POST request to localhost:<PORT>/serverControl
 
 ```xml
 <removeMock xmlns="http://touk.pl/mockserver/api/request">
@@ -188,22 +206,23 @@ If skipReport is set to true then response will be:
 <mockRemoved xmlns="http://touk.pl/mockserver/api/response"/>
 ```
 
-
 Response with error message if failure:
 
 ```xml
 <exceptionOccured xmlns="http://touk.pl/mockserver/api/response">...</exceptionOccured>
 ```
 
+## List mocks definitions
 
-## List of current registered mocks could be retrieved:
-Via client:
+### Via client
 
 ```java
 List<RegisteredMock> mocks = remoteMockServer.listMocks()
 ```
 
-or via sending GET request to localhost:<PORT>/serverControl
+### Via HTTP
+
+Send GET request to localhost:<PORT>/serverControl
 
 Response:
 
