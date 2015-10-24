@@ -2,6 +2,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>pl.touk</groupId>
+        <artifactId>top</artifactId>
+        <version>1.0.7</version>
+    </parent>
+
     <groupId>pl.touk.mockserver</groupId>
     <artifactId>http-mock-server</artifactId>
     <packaging>pom</packaging>
@@ -107,17 +113,19 @@
         </plugins>
     </build>
 
-    <distributionManagement>
+    <contributors>
+        <contributor>
+            <name>Dominik Przybysz</name>
+            <email>alien11689@gmail.com</email>
+        </contributor>
+    </contributors>
+
+    <repositories>
         <repository>
-            <id>touk.nexus.release</id>
-            <name>TouK Virtual Repository</name>
-            <url>http://nexus.touk.pl/nexus/content/repositories/releases</url>
+            <id>touk</id>
+            <name>TouK Open source repository</name>
+            <url>https://philanthropist.touk.pl/nexus/content/repositories/releases</url>
         </repository>
-        <snapshotRepository>
-            <id>touk.nexus.snapshots</id>
-            <name>TouK Virtual Repository</name>
-            <url>http://nexus.touk.pl/nexus/content/repositories/snapshots</url>
-        </snapshotRepository>
-    </distributionManagement>
+    </repositories>
 
 </project>
