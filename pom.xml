@@ -24,6 +24,8 @@
         <slf4j-api.version>1.7.7</slf4j-api.version>
         <logback-classic.version>1.0.13</logback-classic.version>
         <lombok.version>1.16.6</lombok.version>
+
+        <autoVersionSubmodules>true</autoVersionSubmodules>
     </properties>
 
     <scm>
@@ -93,6 +95,14 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.5.2</version>
+                <configuration>
+                    <autoversionsubmodules>true</autoversionsubmodules>
+                </configuration>
             </plugin>
         </plugins>
     </build>
