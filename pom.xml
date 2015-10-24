@@ -27,8 +27,8 @@
     </properties>
 
     <scm>
-        <connection>scm:git:ssh://gerrit.touk.pl:29418/integracja/http-mock-server</connection>
-        <developerConnection>scm:git:ssh://gerrit.touk.pl:29418/integracja/http-mock-server</developerConnection>
+        <connection>scm:git:ssh://git@github.com:TouK/http-mock-server.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com:TouK/http-mock-server.git</developerConnection>
         <tag>HEAD</tag>
     </scm>
 
