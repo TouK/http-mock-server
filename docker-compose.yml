@@ -2,3 +2,5 @@ mocks:
     image: mockserver
     ports:
         - "9999:9999"
+    volumes:
+        - /tmp:/externalSchema

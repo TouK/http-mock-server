@@ -12,7 +12,7 @@ mvn clean package assembly:single
 ## Start server
 
 ```
-java -jar mockserver-<VERSION>-jar-with-dependencies.jar  [PORT]
+java -jar mockserver.jar  [PORT]
 ```
 
 Default port is 9999.
