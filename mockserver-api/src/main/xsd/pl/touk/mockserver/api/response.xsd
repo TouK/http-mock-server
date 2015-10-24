@@ -108,6 +108,7 @@
       <xs:element name="soap" type="xs:boolean"/>
       <xs:element name="method" type="common:method"/>
       <xs:element name="statusCode" type="xs:int"/>
+      <xs:element name="schema" type="xs:string" minOccurs="0"/>
     </xs:sequence>
   </xs:complexType>
 

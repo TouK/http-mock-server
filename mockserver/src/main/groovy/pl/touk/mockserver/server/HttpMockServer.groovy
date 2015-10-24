@@ -64,7 +64,8 @@ class HttpMockServer {
                             responseHeaders: it.responseHeadersClosureText,
                             soap: it.soap,
                             method: it.method,
-                            statusCode: it.statusCode as int
+                            statusCode: it.statusCode as int,
+                            schema: it.schema
                     )
                 }
         )
@@ -95,6 +96,7 @@ class HttpMockServer {
         mock.statusCode = request.statusCode
         mock.method = request.method
         mock.responseHeaders = request.responseHeaders
+        mock.schema = request.schema
         return mock
     }
 
@@ -135,12 +137,12 @@ class HttpMockServer {
                             queryParams: new MockRequestReport.QueryParams(queryParams: it.request.query.collect {
                                 new Parameter(name: it.key, value: it.value)
                             }),
-                            path: new MockRequestReport.Path(pathParts:  it.request.path)
+                            path: new MockRequestReport.Path(pathParts: it.request.path)
                     ),
                     response: new MockResponseReport(
                             statusCode: it.response.statusCode,
                             text: it.response.text,
-                            headers: new MockResponseReport.Headers(headers:  it.response.headers.collect {
+                            headers: new MockResponseReport.Headers(headers: it.response.headers.collect {
                                 new Parameter(name: it.key, value: it.value)
                             })
                     )
@@ -162,6 +164,7 @@ class HttpMockServer {
     }
 
     private static void createErrorResponse(HttpExchange ex, Exception e) {
+        log.warn('Exception occured', e)
         createResponse(ex, new ExceptionOccured(value: e.message), 400)
     }
 

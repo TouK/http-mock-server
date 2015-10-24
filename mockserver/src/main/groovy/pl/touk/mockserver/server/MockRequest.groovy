@@ -4,6 +4,7 @@ import com.sun.net.httpserver.Headers
 import groovy.json.JsonSlurper
 import groovy.transform.PackageScope
 import groovy.util.slurpersupport.GPathResult
+import groovy.xml.XmlUtil
 
 @PackageScope
 class MockRequest {
@@ -69,4 +70,7 @@ class MockRequest {
         } as Map<String, String>
     }
 
+    String getTextWithoutSoap() {
+        return XmlUtil.serialize(soap)
+    }
 }

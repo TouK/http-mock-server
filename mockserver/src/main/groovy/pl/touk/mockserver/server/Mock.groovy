@@ -5,6 +5,10 @@ import groovy.transform.PackageScope
 import groovy.util.logging.Slf4j
 import pl.touk.mockserver.api.common.Method
 
+import javax.xml.XMLConstants
+import javax.xml.transform.stream.StreamSource
+import javax.xml.validation.SchemaFactory
+import javax.xml.validation.Validator
 import java.util.concurrent.CopyOnWriteArrayList
 
 @PackageScope
@@ -25,6 +29,8 @@ class Mock implements Comparable<Mock> {
     Method method = Method.POST
     int counter = 0
     final List<MockEvent> history = new CopyOnWriteArrayList<>()
+    String schema
+    private Validator validator
 
     Mock(String name, String path, int port) {
         if (!(name)) {
@@ -41,6 +47,20 @@ class Mock implements Comparable<Mock> {
 
     MockResponse apply(MockRequest request) {
         log.debug("Mock $name invoked")
+        if (validator) {
+            try {
+                log.debug('Validating...')
+                if (soap) {
+                    validator.validate(new StreamSource(new StringReader(request.textWithoutSoap)))
+                } else {
+                    validator.validate(new StreamSource(new StringReader(request.text)))
+                }
+            } catch (Exception e) {
+                MockResponse response = new MockResponse(400, e.message, [:])
+                history << new MockEvent(request, response)
+                return response
+            }
+        }
         ++counter
         String responseText = response(request)
         String response = soap ? wrapSoap(responseText) : responseText
@@ -105,5 +125,18 @@ class Mock implements Comparable<Mock> {
     @Override
     int compareTo(Mock o) {
         return name.compareTo(o.name)
+    }
+
+    void setSchema(String schema) {
+        this.schema = schema
+        if (schema) {
+            try {
+                validator = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI)
+                        .newSchema(new File(this.class.getResource("/$schema").path))
+                        .newValidator()
+            } catch (Exception e) {
+                throw new RuntimeException('mock request schema is invalid schema', e)
+            }
+        }
     }
 }

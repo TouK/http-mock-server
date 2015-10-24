@@ -7,11 +7,10 @@ import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
-import pl.touk.mockserver.api.request.AddMock
 import pl.touk.mockserver.api.common.Method
+import pl.touk.mockserver.api.request.AddMock
 import pl.touk.mockserver.api.response.MockEventReport
 import pl.touk.mockserver.api.response.MockReport
-import pl.touk.mockserver.api.response.Parameter
 import pl.touk.mockserver.client.*
 import pl.touk.mockserver.server.HttpMockServer
 import spock.lang.Shared
@@ -144,6 +143,20 @@ class MockServerIntegrationTest extends Specification {
             ))
         then:
             thrown(MockAlreadyExists)
+    }
+
+    def "should not add mock when schema does not exist"() {
+        when:
+            remoteMockServer.addMock(new AddMock(
+                    name: 'test',
+                    path: 'testEndpoint2',
+                    port: 9998,
+                    response: '''{req -> "<goodResponse/>"}''',
+                    soap: false,
+                    schema: 'ble.xsd'
+            ))
+        then:
+            thrown(InvalidMockRequestSchema)
     }
 
     def "should not add mock with empty name"() {
@@ -634,21 +647,22 @@ class MockServerIntegrationTest extends Specification {
             remoteMockServer.addMock(new AddMock(
                     name: 'testRest',
                     path: 'testEndpoint',
-                    port: 9999
+                    port: 9999,
+                    schema: 'schema2.xsd'
             ))
             remoteMockServer.removeMock('testRest5')
         when:
             List<MockReport> mockReport = remoteMockServer.listMocks()
         then:
             mockReport.size() == 5
-            assertMockReport(mockReport[0], [name:'testRest', path: 'testEndpoint', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: false, statusCode: 200, method: Method.POST])
+            assertMockReport(mockReport[0], [name: 'testRest', path: 'testEndpoint', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: false, statusCode: 200, method: Method.POST, schema: 'schema2.xsd'])
             assertMockReport(mockReport[1], [name: 'testRest2', path: 'testEndpoint', port: 9998, predicate: '''{ req -> req.xml.name() == 'request1'}''', response: '''{ req -> '<response/>' }''', responseHeaders: '{ _ -> [a: "b"] }', soap: false, statusCode: 200, method: Method.POST])
             assertMockReport(mockReport[2], [name: 'testRest3', path: 'testEndpoint2', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: false, statusCode: 200, method: Method.POST])
             assertMockReport(mockReport[3], [name: 'testRest4', path: 'testEndpoint', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: true, statusCode: 204, method: Method.PUT])
             assertMockReport(mockReport[4], [name: 'testRest6', path: 'testEndpoint2', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: false, statusCode: 200, method: Method.POST])
     }
 
-    private void assertMockReport( MockReport mockReport, Map<String, Object> props) {
+    private static void assertMockReport(MockReport mockReport, Map<String, Object> props) {
         props.each {
             assert mockReport."${it.key}" == it.value
         }
@@ -820,9 +834,9 @@ class MockServerIntegrationTest extends Specification {
             mockEvents2.size() == 1
             mockEvents2[0].request.text == '<reqXYZ/>'
             !mockEvents2[0].request.headers?.headers?.empty
-            mockEvents2[0].request.queryParams.queryParams.find{it.name == 'id'}?.value == '123'
+            mockEvents2[0].request.queryParams.queryParams.find { it.name == 'id' }?.value == '123'
             mockEvents2[0].request.path.pathParts == ['testEndpoint']
-            mockEvents2[0].response.headers.headers.find {it.name == 'aaa'}?.value == '15'
+            mockEvents2[0].response.headers.headers.find { it.name == 'aaa' }?.value == '15'
             mockEvents2[0].response.text == '<goodResponseRest/>'
             mockEvents2[0].response.statusCode == 202
     }
@@ -880,5 +894,101 @@ class MockServerIntegrationTest extends Specification {
                     '''{req -> System.    exit(-1); req.xml.name() == 'request'}''',
                     '''{req -> System.exit   (-1); req.xml.name() == 'request'}'''
             ]
+    }
+
+    def "should validate request against multiple schema files"() {
+        expect:
+            remoteMockServer.addMock(new AddMock(
+                    name: 'testRest',
+                    path: 'testEndpoint',
+                    port: 9999,
+                    schema: 'schema1.xsd',
+                    response: '''{req -> '<goodResponseRest/>'}''',
+                    soap: false
+            ))
+        when:
+            HttpPost restPost = new HttpPost('http://localhost:9999/testEndpoint')
+            restPost.entity = new StringEntity('<request xmlns="http://mockserver/test1"><id>15</id><value>unknown</value></request>', ContentType.create("text/xml", "UTF-8"))
+            CloseableHttpResponse response = client.execute(restPost)
+        then:
+            response.statusLine.statusCode == 400
+            Util.extractStringResponse(response).contains('''Value 'unknown' is not facet-valid with respect to enumeration '[test, prod, preprod]'.''')
+        when:
+            HttpPost restPost2 = new HttpPost('http://localhost:9999/testEndpoint')
+            restPost2.entity = new StringEntity('<request xmlns="http://mockserver/test1"><id>15</id><value>test</value></request>', ContentType.create("text/xml", "UTF-8"))
+            CloseableHttpResponse response2 = client.execute(restPost2)
+        then:
+            Util.consumeResponse(response2)
+            response2.statusLine.statusCode == 200
+        expect:
+            remoteMockServer.removeMock('testRest')?.size() == 2
+    }
+
+    def "should validate soap request"() {
+        expect:
+            remoteMockServer.addMock(new AddMock(
+                    name: 'testSoap',
+                    path: 'testEndpoint',
+                    port: 9999,
+                    schema: 'schema1.xsd',
+                    response: '''{req -> '<goodResponse/>'}''',
+                    soap: true
+            ))
+        when:
+            HttpPost restPost = new HttpPost('http://localhost:9999/testEndpoint')
+            restPost.entity = new StringEntity(Util.soap('<request xmlns="http://mockserver/test1"><id>15</id><value>unknown</value></request>'), ContentType.create("text/xml", "UTF-8"))
+            CloseableHttpResponse response = client.execute(restPost)
+        then:
+            response.statusLine.statusCode == 400
+            Util.extractStringResponse(response).contains('''Value 'unknown' is not facet-valid with respect to enumeration '[test, prod, preprod]'.''')
+        when:
+            HttpPost restPost2 = new HttpPost('http://localhost:9999/testEndpoint')
+            restPost2.entity = new StringEntity(Util.soap('<request xmlns="http://mockserver/test1"><id>15</id><value>test</value></request>'), ContentType.create("text/xml", "UTF-8"))
+            CloseableHttpResponse response2 = client.execute(restPost2)
+        then:
+            Util.consumeResponse(response2)
+            response2.statusLine.statusCode == 200
+        expect:
+            remoteMockServer.removeMock('testSoap')?.size() == 2
+    }
+
+    def "should validate soap request with namespace in envelope"() {
+        expect:
+            remoteMockServer.addMock(new AddMock(
+                    name: 'testSoap',
+                    path: 'testEndpoint',
+                    port: 9999,
+                    schema: 'schema1.xsd',
+                    response: '''{req -> '<goodResponse/>'}''',
+                    soap: true
+            ))
+        when:
+            HttpPost restPost = new HttpPost('http://localhost:9999/testEndpoint')
+            restPost.entity = new StringEntity('''<soap-env:Envelope xmlns:soap-env='http://schemas.xmlsoap.org/soap/envelope/'
+                   xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing"
+        xmlns:req="http://mockserver/test1">
+    <soap-env:Body>
+        <req:request><req:id>15</req:id><req:value>unknown</req:value></req:request>
+    </soap-env:Body>
+</soap-env:Envelope>''', ContentType.create("text/xml", "UTF-8"))
+            CloseableHttpResponse response = client.execute(restPost)
+        then:
+            response.statusLine.statusCode == 400
+            Util.extractStringResponse(response).contains('''Value 'unknown' is not facet-valid with respect to enumeration '[test, prod, preprod]'.''')
+        when:
+            HttpPost restPost2 = new HttpPost('http://localhost:9999/testEndpoint')
+            restPost2.entity = new StringEntity('''<soap-env:Envelope xmlns:soap-env='http://schemas.xmlsoap.org/soap/envelope/'
+                   xmlns:wsa="http://schemas.xmlsoap.org/ws/2004/08/addressing"
+        xmlns:req="http://mockserver/test1">
+    <soap-env:Body>
+        <req:request><req:id>15</req:id><req:value>test</req:value></req:request>
+    </soap-env:Body>
+</soap-env:Envelope>''', ContentType.create("text/xml", "UTF-8"))
+            CloseableHttpResponse response2 = client.execute(restPost2)
+        then:
+            Util.consumeResponse(response2)
+            response2.statusLine.statusCode == 200
+        expect:
+            remoteMockServer.removeMock('testSoap')?.size() == 2
     }
 }

@@ -42,6 +42,9 @@ class Util {
         if (message == 'mock not registered') {
             throw new MockDoesNotExist()
         }
+        if (message == 'mock request schema is invalid schema') {
+            throw new InvalidMockRequestSchema()
+        }
         throw new InvalidMockDefinition(message)
     }
 
