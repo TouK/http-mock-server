@@ -17,6 +17,7 @@
         <module>mockserver</module>
         <module>mockserver-tests</module>
         <module>mockserver-api</module>
+        <module>performance-tests</module>
     </modules>
 
     <properties>
