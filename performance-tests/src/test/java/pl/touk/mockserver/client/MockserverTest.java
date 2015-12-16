@@ -21,6 +21,9 @@ import java.util.concurrent.TimeUnit;
 public class MockserverTest {
     HttpMockServer httpMockServer;
 
+    @Param({"9000", "8000"})
+    int initialPort;
+
     @Setup
     public void prepareMockServer(BenchmarkParams params) {
         httpMockServer = new HttpMockServer(9999);
@@ -54,7 +57,7 @@ public class MockserverTest {
     public void shouldHandleManyRequestsSimultaneously(TestState testState, Blackhole bh) throws IOException {
         int current = testState.current;
         int endpointNumber = current % 10;
-        int port = 9000 + (current % 7);
+        int port = initialPort + (current % 7);
         AddMock addMock = new AddMock();
         addMock.setName("testRest" + current);
         addMock.setPath("testEndpoint" + endpointNumber);
