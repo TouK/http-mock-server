@@ -2,11 +2,21 @@ package pl.touk.mockserver.server
 
 import com.sun.net.httpserver.HttpExchange
 import groovy.util.logging.Slf4j
+import pl.touk.mockserver.api.common.ImportAlias
 import pl.touk.mockserver.api.request.AddMock
 import pl.touk.mockserver.api.request.MockServerRequest
 import pl.touk.mockserver.api.request.PeekMock
 import pl.touk.mockserver.api.request.RemoveMock
-import pl.touk.mockserver.api.response.*
+import pl.touk.mockserver.api.response.ExceptionOccured
+import pl.touk.mockserver.api.response.MockAdded
+import pl.touk.mockserver.api.response.MockEventReport
+import pl.touk.mockserver.api.response.MockPeeked
+import pl.touk.mockserver.api.response.MockRemoved
+import pl.touk.mockserver.api.response.MockReport
+import pl.touk.mockserver.api.response.MockRequestReport
+import pl.touk.mockserver.api.response.MockResponseReport
+import pl.touk.mockserver.api.response.Mocks
+import pl.touk.mockserver.api.response.Parameter
 
 import javax.xml.bind.JAXBContext
 import java.util.concurrent.ConcurrentHashMap
@@ -65,7 +75,8 @@ class HttpMockServer {
                             soap: it.soap,
                             method: it.method,
                             statusCode: it.statusCode as int,
-                            schema: it.schema
+                            schema: it.schema,
+                            imports: it.imports.collect { new ImportAlias(alias: it.key, fullClassName: it.value) }
                     )
                 }
         )
@@ -90,6 +101,7 @@ class HttpMockServer {
 
     private static Mock mockFromRequest(AddMock request) {
         Mock mock = new Mock(request.name, request.path, request.port)
+        mock.imports = request.imports?.collectEntries { [(it.alias): it.fullClassName] } ?: [:]
         mock.predicate = request.predicate
         mock.response = request.response
         mock.soap = request.soap

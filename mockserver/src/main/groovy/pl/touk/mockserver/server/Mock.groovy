@@ -3,6 +3,8 @@ package pl.touk.mockserver.server
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.PackageScope
 import groovy.util.logging.Slf4j
+import org.codehaus.groovy.control.CompilerConfiguration
+import org.codehaus.groovy.control.customizers.ImportCustomizer
 import pl.touk.mockserver.api.common.Method
 
 import javax.xml.XMLConstants
@@ -31,6 +33,7 @@ class Mock implements Comparable<Mock> {
     final List<MockEvent> history = new CopyOnWriteArrayList<>()
     String schema
     private Validator validator
+    Map<String, String> imports = [:]
 
     Mock(String name, String path, int port) {
         if (!(name)) {
@@ -88,7 +91,13 @@ class Mock implements Comparable<Mock> {
         if (predicate ==~ /(?m).*System\s*\.\s*exit\s*\(.*/) {
             throw new RuntimeException('System.exit is forbidden')
         }
-        GroovyShell sh = new GroovyShell(this.class.classLoader);
+        CompilerConfiguration compilerConfiguration = new CompilerConfiguration()
+        ImportCustomizer customizer = new ImportCustomizer()
+        imports.each {
+            customizer.addImport(it.key, it.value)
+        }
+        compilerConfiguration.addCompilationCustomizers(customizer)
+        GroovyShell sh = new GroovyShell(this.class.classLoader, compilerConfiguration);
         return sh.evaluate(predicate) as Closure
     }
 

@@ -1,17 +1,31 @@
 package pl.touk.mockserver.tests
 
 import groovy.util.slurpersupport.GPathResult
-import org.apache.http.client.methods.*
+import org.apache.http.client.methods.CloseableHttpResponse
+import org.apache.http.client.methods.HttpDelete
+import org.apache.http.client.methods.HttpGet
+import org.apache.http.client.methods.HttpHead
+import org.apache.http.client.methods.HttpOptions
+import org.apache.http.client.methods.HttpPatch
+import org.apache.http.client.methods.HttpPost
+import org.apache.http.client.methods.HttpPut
+import org.apache.http.client.methods.HttpTrace
 import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.CloseableHttpClient
 import org.apache.http.impl.client.HttpClients
 import org.apache.http.util.EntityUtils
+import pl.touk.mockserver.api.common.ImportAlias
 import pl.touk.mockserver.api.common.Method
 import pl.touk.mockserver.api.request.AddMock
 import pl.touk.mockserver.api.response.MockEventReport
 import pl.touk.mockserver.api.response.MockReport
-import pl.touk.mockserver.client.*
+import pl.touk.mockserver.client.InvalidMockDefinition
+import pl.touk.mockserver.client.InvalidMockRequestSchema
+import pl.touk.mockserver.client.MockAlreadyExists
+import pl.touk.mockserver.client.MockDoesNotExist
+import pl.touk.mockserver.client.RemoteMockServer
+import pl.touk.mockserver.client.Util
 import pl.touk.mockserver.server.HttpMockServer
 import spock.lang.Shared
 import spock.lang.Specification
@@ -611,7 +625,7 @@ class MockServerIntegrationTest extends Specification {
             restPostResponse.name == 'goodResponse-1'
     }
 
-    def "should get list mocks"() {
+    def "should get list of mocks"() {
         given:
             remoteMockServer.addMock(new AddMock(
                     name: 'testRest2',
@@ -648,7 +662,8 @@ class MockServerIntegrationTest extends Specification {
                     name: 'testRest',
                     path: 'testEndpoint',
                     port: 9999,
-                    schema: 'schema2.xsd'
+                    schema: 'schema2.xsd',
+                    imports: [new ImportAlias(alias: 'aaa', fullClassName: 'bbb')]
             ))
             remoteMockServer.removeMock('testRest5')
         when:
@@ -660,6 +675,7 @@ class MockServerIntegrationTest extends Specification {
             assertMockReport(mockReport[2], [name: 'testRest3', path: 'testEndpoint2', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: false, statusCode: 200, method: Method.POST])
             assertMockReport(mockReport[3], [name: 'testRest4', path: 'testEndpoint', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: true, statusCode: 204, method: Method.PUT])
             assertMockReport(mockReport[4], [name: 'testRest6', path: 'testEndpoint2', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: false, statusCode: 200, method: Method.POST])
+            mockReport[0].imports.find { it.alias == 'aaa' }?.fullClassName == 'bbb'
     }
 
     private static void assertMockReport(MockReport mockReport, Map<String, Object> props) {
@@ -990,5 +1006,27 @@ class MockServerIntegrationTest extends Specification {
             response2.statusLine.statusCode == 200
         expect:
             remoteMockServer.removeMock('testSoap')?.size() == 2
+    }
+
+    def "should add mock with alias"() {
+        expect:
+            remoteMockServer.addMock(new AddMock(
+                    name: 'testRest',
+                    path: 'testEndpoint',
+                    port: 9999,
+                    predicate: '''{req -> req.xml.name() == 'request'}''',
+                    response: '''{req -> "<goodResponseRest-${AAA.XMLNS_ATTRIBUTE}/>"}''',
+                    soap: false,
+                    imports: [new ImportAlias(alias: 'AAA', fullClassName: 'javax.xml.XMLConstants')]
+            ))
+        when:
+            HttpPost restPost = new HttpPost('http://localhost:9999/testEndpoint')
+            restPost.entity = new StringEntity('<request/>', ContentType.create("text/xml", "UTF-8"))
+            CloseableHttpResponse response = client.execute(restPost)
+        then:
+            GPathResult restPostResponse = Util.extractXmlResponse(response)
+            restPostResponse.name() == 'goodResponseRest-xmlns'
+        expect:
+            remoteMockServer.removeMock('testRest')?.size() == 1
     }
 }
