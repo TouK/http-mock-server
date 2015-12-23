@@ -66,7 +66,7 @@ testRest {
 }
 ```
 
-### Start with docker
+### Build with docker
 
 Docker and docker-compose is needed.
 
@@ -74,6 +74,10 @@ Docker and docker-compose is needed.
 ./buildImage.sh
 docker-compose up -d
 ```
+
+### Docker repoository
+
+Built image is available at https://hub.docker.com/r/alien11689/mockserver/
 
 Create mock on server
 ---------------------
