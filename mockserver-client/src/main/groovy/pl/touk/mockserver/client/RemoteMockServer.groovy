@@ -11,7 +11,11 @@ import pl.touk.mockserver.api.request.AddMock
 import pl.touk.mockserver.api.request.MockServerRequest
 import pl.touk.mockserver.api.request.PeekMock
 import pl.touk.mockserver.api.request.RemoveMock
-import pl.touk.mockserver.api.response.*
+import pl.touk.mockserver.api.response.MockEventReport
+import pl.touk.mockserver.api.response.MockPeeked
+import pl.touk.mockserver.api.response.MockRemoved
+import pl.touk.mockserver.api.response.MockReport
+import pl.touk.mockserver.api.response.Mocks
 
 import javax.xml.bind.JAXBContext
 
@@ -45,6 +49,13 @@ class RemoteMockServer {
         CloseableHttpResponse response = client.execute(removeMockPost)
         MockPeeked mockPeeked = Util.extractResponse(response) as MockPeeked
         return mockPeeked.mockEvents ?: []
+    }
+
+    ConfigObject getConfiguration() {
+        HttpGet get = new HttpGet(address + '/configuration')
+        CloseableHttpResponse response = client.execute(get)
+        String configuration = Util.extractStringResponse(response)
+        return new ConfigSlurper().parse(configuration)
     }
 
     private static StringEntity buildRemoveMockRequest(RemoveMock data) {

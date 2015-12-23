@@ -1,23 +1,70 @@
 [![Build Status](https://img.shields.io/travis/TouK/http-mock-server/master.svg?style=flat)](https://travis-ci.org/TouK/http-mock-server)
 
-# HTTP MOCK SERVER
+HTTP MOCK SERVER
+================
 
-## Create server jar
+Http Mock Server allows to mock HTTP request using groovy closures.
+
+Create server jar
+-----------------
 
 ```
 cd mockserver
 mvn clean package assembly:single
 ```
 
-## Start server
+Start server
+------------
 
 ### Native start
 
 ```
-java -jar mockserver.jar  [PORT]
+java -jar mockserver-full.jar [PORT] [CONFIGURATION_FILE]
 ```
 
 Default port is 9999.
+
+If configuration file is passed then port must be defined.
+
+Configuration file is groovy configuration script e.g. :
+
+```groovy
+testRest2 {
+	port=9998
+	response='{ req -> \'<response/>\' }'
+	responseHeaders='{ _ -> [a: "b"] }'
+	path='testEndpoint'
+	predicate='{ req -> req.xml.name() == \'request1\'}'
+	name='testRest2'
+}
+testRest4 {
+	soap=true
+	port=9999
+	path='testEndpoint'
+	name='testRest4'
+	method='PUT'
+	statusCode=204
+}
+testRest3 {
+	port=9999
+	path='testEndpoint2'
+	name='testRest3'
+}
+testRest6 {
+	port=9999
+	path='testEndpoint2'
+	name='testRest6'
+}
+testRest {
+	imports {
+		aaa='bbb'
+		ccc='bla'
+	}
+	port=10001
+	path='testEndpoint'
+	name='testRest'
+}
+```
 
 ### Start with docker
 
@@ -28,7 +75,8 @@ Docker and docker-compose is needed.
 docker-compose up -d
 ```
 
-## Create mock on server
+Create mock on server
+---------------------
 
 ### Via client
 
@@ -47,10 +95,10 @@ remoteMockServer.addMock(new AddMock(
                     schema: ...
             ))
 ```
+
 ### Via HTTP
 
 Send POST request to localhost:<PORT>/serverControl
-
 
 ```xml
 <addMock xmlns="http://touk.pl/mockserver/api/request">
@@ -64,33 +112,35 @@ Send POST request to localhost:<PORT>/serverControl
     <method>...</method>
     <responseHeaders>...</responseHeaders>
     <schema>...</schema>
+    <imports alias="..." fullClassName="..."/>
 </addMock>
 ```
 
 ### Parameters
 
-* name - name of mock, must be unique
-* path - path on which mock should be created
-* port - inteer, port on which mock should be created, cannot be the same as mock server port
-* predicate - groovy closure as string which must evaluate to true, when request object will be given to satisfy mock, optional, default {_ -> true}
-* response - groovy closure as string which must evaluate to string which will be response of mock when predicate is satisfied, optional, default { _ -> '' }
-* soap - true or false, is request and response should be wrapped in soap Envelope and Body elements, default false
-* statusCode - integer, status code of response when predicate is satisfied, default 200
-* method - POST|PUT|DELETE|GET|TRACE|OPTION|HEAD, expected http method of request, default POST
-* responseHeaders - groovyClosure as string which must evaluate to Map which will be added to response headers, default { _ -> [:] }
-* schema - path to xsd schema file on mockserver classpath; default empty, so no vallidation of request is performed; if validation fails then response has got status 400 and response is raw message from validator
+-	name - name of mock, must be unique
+-	path - path on which mock should be created
+-	port - inteer, port on which mock should be created, cannot be the same as mock server port
+-	predicate - groovy closure as string which must evaluate to true, when request object will be given to satisfy mock, optional, default {_ -> true}
+-	response - groovy closure as string which must evaluate to string which will be response of mock when predicate is satisfied, optional, default { _ -> '' }
+-	soap - true or false, is request and response should be wrapped in soap Envelope and Body elements, default false
+-	statusCode - integer, status code of response when predicate is satisfied, default 200
+-	method - POST|PUT|DELETE|GET|TRACE|OPTION|HEAD, expected http method of request, default POST
+-	responseHeaders - groovyClosure as string which must evaluate to Map which will be added to response headers, default { _ -> \[:] }
+-	schema - path to xsd schema file on mockserver classpath; default empty, so no vallidation of request is performed; if validation fails then response has got status 400 and response is raw message from validator
+-	imports - list of imports for closures (each import is separate tag); `alias` is the name of `fullClassName` available in closure; `fullClassName` must be available on classpath of mock server
 
 ### Closures request properties
 
 In closures input parameter (called req) contains properties:
 
-* text - request body as java.util.String
-* headers - java.util.Map with request headers
-* query - java.util.Map with query parameters
-* xml - groovy.util.slurpersupport.GPathResult created from request body (if request body is valid xml)
-* soap - groovy.util.slurpersupport.GPathResult created from request body without Envelope and Body elements (if request body is valid soap xml)
-* json - java.lang.Object created from request body (if request body is valid json)
-* path - java.util.List<String> with not empty parts of request path
+-	text - request body as java.util.String
+-	headers - java.util.Map with request headers
+-	query - java.util.Map with query parameters
+-	xml - groovy.util.slurpersupport.GPathResult created from request body (if request body is valid xml)
+-	soap - groovy.util.slurpersupport.GPathResult created from request body without Envelope and Body elements (if request body is valid soap xml)
+-	json - java.lang.Object created from request body (if request body is valid json)
+-	path - java.util.List<String> with not empty parts of request path
 
 Response if success:
 
@@ -104,7 +154,9 @@ Response with error message if failure:
 <exceptionOccured xmlns="http://touk.pl/mockserver/api/response">...</exceptionOccured>
 ```
 
-## Peek mock
+Peek mock
+---------
+
 Mock could be peeked to get get report of its invocations.
 
 ### Via client
@@ -114,6 +166,7 @@ List<MockEvent> mockEvents = remoteMockServer.peekMock('...')
 ```
 
 ### Via HTTP
+
 Send POST request to localhost:<PORT>/serverControl
 
 ```xml
@@ -160,7 +213,8 @@ Response with error message if failure:
 <exceptionOccured xmlns="http://touk.pl/mockserver/api/response">...</exceptionOccured>
 ```
 
-## Remove mock
+Remove mock
+-----------
 
 When mock was used it could be unregistered by name. It also optionally returns report of mock invocations if second parameter is true.
 
@@ -169,7 +223,9 @@ When mock was used it could be unregistered by name. It also optionally returns 
 ```java
 List<MockEvent> mockEvents = remoteMockServer.removeMock('...', ...)
 ```
+
 ### Via HTTP
+
 Send POST request to localhost:<PORT>/serverControl
 
 ```xml
@@ -223,7 +279,8 @@ Response with error message if failure:
 <exceptionOccured xmlns="http://touk.pl/mockserver/api/response">...</exceptionOccured>
 ```
 
-## List mocks definitions
+List mocks definitions
+----------------------
 
 ### Via client
 
@@ -249,12 +306,69 @@ Response:
     <soap>...</soap>
     <method>...</method>
     <statusCode>...</statusCode>
+    <imports alias="..." fullClassName="..."/>
   </mock>
   ...
 </mocks>
 ```
 
-## Remote repository
+Get mocks configuration
+-----------------------
+
+### Via client
+
+```java
+ConfigObject mocks = remoteMockServer.getConfiguration()
+```
+
+### Via HTTP
+
+Send GET request to localhost:<PORT>/serverControl/configuration
+
+Response:
+
+```groovy
+testRest2 {
+	port=9998
+	response='{ req -> \'<response/>\' }'
+	responseHeaders='{ _ -> [a: "b"] }'
+	path='testEndpoint'
+	predicate='{ req -> req.xml.name() == \'request1\'}'
+	name='testRest2'
+}
+testRest4 {
+	soap=true
+	port=9999
+	path='testEndpoint'
+	name='testRest4'
+	method='PUT'
+	statusCode=204
+}
+testRest3 {
+	port=9999
+	path='testEndpoint2'
+	name='testRest3'
+}
+testRest6 {
+	port=9999
+	path='testEndpoint2'
+	name='testRest6'
+}
+testRest {
+	imports {
+		aaa='bbb'
+		ccc='bla'
+	}
+	port=10001
+	path='testEndpoint'
+	name='testRest'
+}
+```
+
+This response could be saved to file and passed as it is during mock server creation.
+
+Remote repository
+-----------------
 
 Mockserver is available at `philanthropist.touk.pl`.
 

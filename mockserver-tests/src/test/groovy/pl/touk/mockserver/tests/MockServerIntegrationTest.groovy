@@ -1029,4 +1029,66 @@ class MockServerIntegrationTest extends Specification {
         expect:
             remoteMockServer.removeMock('testRest')?.size() == 1
     }
+
+    def "should get configuration of mocks and reconfigure new mock server based on it"() {
+        given:
+            remoteMockServer.addMock(new AddMock(
+                    name: 'testRest2',
+                    path: 'testEndpoint',
+                    port: 9998,
+                    predicate: '''{ req -> req.xml.name() == 'request1'}''',
+                    response: '''{ req -> '<response/>' }''',
+                    responseHeaders: '{ _ -> [a: "b"] }'
+            ))
+            remoteMockServer.addMock(new AddMock(
+                    name: 'testRest4',
+                    path: 'testEndpoint',
+                    port: 9999,
+                    soap: true,
+                    statusCode: 204,
+                    method: Method.PUT
+            ))
+            remoteMockServer.addMock(new AddMock(
+                    name: 'testRest3',
+                    path: 'testEndpoint2',
+                    port: 9999
+            ))
+            remoteMockServer.addMock(new AddMock(
+                    name: 'testRest5',
+                    path: 'testEndpoint',
+                    port: 9999
+            ))
+            remoteMockServer.addMock(new AddMock(
+                    name: 'testRest6',
+                    path: 'testEndpoint2',
+                    port: 9999
+            ))
+            remoteMockServer.addMock(new AddMock(
+                    name: 'testRest',
+                    path: 'testEndpoint',
+                    port: 9999,
+                    schema: 'schema2.xsd',
+                    imports: [
+                            new ImportAlias(alias: 'aaa', fullClassName: 'bbb'),
+                            new ImportAlias(alias: 'ccc', fullClassName: 'bla')
+                    ]
+            ))
+            remoteMockServer.removeMock('testRest5')
+        when:
+            ConfigObject configObject = remoteMockServer.configuration
+            httpMockServer.stop()
+            httpMockServer = new HttpMockServer(9000, configObject)
+
+        then:
+            List<MockReport> mockReport = remoteMockServer.listMocks()
+            mockReport.size() == 5
+            assertMockReport(mockReport[0], [name: 'testRest', path: 'testEndpoint', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: false, statusCode: 200, method: Method.POST, schema: 'schema2.xsd'])
+            assertMockReport(mockReport[1], [name: 'testRest2', path: 'testEndpoint', port: 9998, predicate: '''{ req -> req.xml.name() == 'request1'}''', response: '''{ req -> '<response/>' }''', responseHeaders: '{ _ -> [a: "b"] }', soap: false, statusCode: 200, method: Method.POST])
+            assertMockReport(mockReport[2], [name: 'testRest3', path: 'testEndpoint2', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: false, statusCode: 200, method: Method.POST])
+            assertMockReport(mockReport[3], [name: 'testRest4', path: 'testEndpoint', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: true, statusCode: 204, method: Method.PUT])
+            assertMockReport(mockReport[4], [name: 'testRest6', path: 'testEndpoint2', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: false, statusCode: 200, method: Method.POST])
+            mockReport[0].imports.find { it.alias == 'aaa' }?.fullClassName == 'bbb'
+            mockReport[0].imports.find { it.alias == 'ccc' }?.fullClassName == 'bla'
+    }
+
 }

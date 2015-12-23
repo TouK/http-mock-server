@@ -3,6 +3,7 @@ package pl.touk.mockserver.server
 import com.sun.net.httpserver.HttpExchange
 import groovy.util.logging.Slf4j
 import pl.touk.mockserver.api.common.ImportAlias
+import pl.touk.mockserver.api.common.Method
 import pl.touk.mockserver.api.request.AddMock
 import pl.touk.mockserver.api.request.MockServerRequest
 import pl.touk.mockserver.api.request.PeekMock
@@ -30,18 +31,27 @@ class HttpMockServer {
     private final HttpServerWraper httpServerWraper
     private final Map<Integer, HttpServerWraper> childServers = new ConcurrentHashMap<>()
     private final Set<String> mockNames = new CopyOnWriteArraySet<>()
+    private final ConfigObject configuration = new ConfigObject()
 
     private static
     final JAXBContext requestJaxbContext = JAXBContext.newInstance(AddMock.package.name, AddMock.classLoader)
 
-    HttpMockServer(int port = 9999) {
+    HttpMockServer(int port = 9999, ConfigObject initialConfiguration = new ConfigObject()) {
         httpServerWraper = new HttpServerWraper(port)
+
+        initialConfiguration.values()?.each { ConfigObject co ->
+            addMock(co)
+        }
 
         httpServerWraper.createContext('/serverControl', {
             HttpExchange ex ->
                 try {
                     if (ex.requestMethod == 'GET') {
-                        listMocks(ex)
+                        if (ex.requestURI.path == '/serverControl/configuration') {
+                            createResponse(ex, configuration.prettyPrint(), 200)
+                        } else {
+                            listMocks(ex)
+                        }
                     } else if (ex.requestMethod == 'POST') {
                         MockServerRequest request = requestJaxbContext.createUnmarshaller().unmarshal(ex.requestBody) as MockServerRequest
                         if (request instanceof AddMock) {
@@ -95,8 +105,39 @@ class HttpMockServer {
         Mock mock = mockFromRequest(request)
         HttpServerWraper child = getOrCreateChildServer(mock.port)
         child.addMock(mock)
+        saveConfiguration(request)
         mockNames << name
         createResponse(ex, new MockAdded(), 200)
+    }
+
+    private void addMock(ConfigObject co) {
+        String name = co.name
+        if (name in mockNames) {
+            throw new RuntimeException('mock already registered')
+        }
+        Mock mock = mockFromConfig(co)
+        HttpServerWraper child = getOrCreateChildServer(mock.port)
+        child.addMock(mock)
+        configuration.put(name, co)
+        mockNames << name
+    }
+
+    private void saveConfiguration(AddMock request) {
+        ConfigObject mockDefinition = new ConfigObject()
+        request.metaPropertyValues.findAll { it.name != 'class' && it.value }.each {
+            if (it.name == 'imports') {
+                ConfigObject configObject = new ConfigObject()
+                it.value.each { ImportAlias imp ->
+                    configObject.put(imp.alias, imp.fullClassName)
+                }
+                mockDefinition.put(it.name, configObject)
+            } else if (it.name == 'method') {
+                mockDefinition.put(it.name, it.value.name())
+            } else {
+                mockDefinition.put(it.name, it.value)
+            }
+        }
+        configuration.put(request.name, mockDefinition)
     }
 
     private static Mock mockFromRequest(AddMock request) {
@@ -109,6 +150,19 @@ class HttpMockServer {
         mock.method = request.method
         mock.responseHeaders = request.responseHeaders
         mock.schema = request.schema
+        return mock
+    }
+
+    private static Mock mockFromConfig(ConfigObject co) {
+        Mock mock = new Mock(co.name, co.path, co.port)
+        mock.imports = co.imports
+        mock.predicate = co.predicate ?: null
+        mock.response = co.response ?: null
+        mock.soap = co.soap ?: null
+        mock.statusCode = co.statusCode ?: null
+        mock.method = co.method ? Method.valueOf(co.method) : null
+        mock.responseHeaders = co.responseHeaders ?: null
+        mock.schema = co.schema ?: null
         return mock
     }
 
@@ -132,6 +186,7 @@ class HttpMockServer {
             it.removeMock(name)
         }.flatten() as List<MockEvent>
         mockNames.remove(name)
+        configuration.remove(name)
         MockRemoved mockRemoved = new MockRemoved(
                 mockEvents: createMockEventReports(mockEvents)
         )

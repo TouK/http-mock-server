@@ -8,4 +8,4 @@ RUN mkdir /externalSchema
 
 VOLUME /externalSchema
 
-CMD java -cp /mockserver.jar:/externalSchema -jar /mockserver.jar
+CMD java -cp /mockserver.jar:/externalSchema pl.touk.mockserver.server.Main
