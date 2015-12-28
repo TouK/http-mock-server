@@ -34,6 +34,7 @@ class Mock implements Comparable<Mock> {
     String schema
     private Validator validator
     Map<String, String> imports = [:]
+    boolean preserveHistory = true
 
     Mock(String name, String path, int port) {
         if (!(name)) {
@@ -60,7 +61,9 @@ class Mock implements Comparable<Mock> {
                 }
             } catch (Exception e) {
                 MockResponse response = new MockResponse(400, e.message, [:])
-                history << new MockEvent(request, response)
+                if(preserveHistory) {
+                    history << new MockEvent(request, response)
+                }
                 return response
             }
         }
@@ -69,7 +72,9 @@ class Mock implements Comparable<Mock> {
         String response = soap ? wrapSoap(responseText) : responseText
         Map<String, String> headers = responseHeaders(request)
         MockResponse mockResponse = new MockResponse(statusCode, response, headers)
-        history << new MockEvent(request, mockResponse)
+        if(preserveHistory) {
+            history << new MockEvent(request, mockResponse)
+        }
         return mockResponse
     }
 

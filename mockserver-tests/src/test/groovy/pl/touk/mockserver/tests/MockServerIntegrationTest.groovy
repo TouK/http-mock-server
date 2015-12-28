@@ -1071,7 +1071,8 @@ class MockServerIntegrationTest extends Specification {
                     imports: [
                             new ImportAlias(alias: 'aaa', fullClassName: 'bbb'),
                             new ImportAlias(alias: 'ccc', fullClassName: 'bla')
-                    ]
+                    ],
+                    preserveHistory: true
             ))
             remoteMockServer.removeMock('testRest5')
         when:
@@ -1082,13 +1083,35 @@ class MockServerIntegrationTest extends Specification {
         then:
             List<MockReport> mockReport = remoteMockServer.listMocks()
             mockReport.size() == 5
-            assertMockReport(mockReport[0], [name: 'testRest', path: 'testEndpoint', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: false, statusCode: 200, method: Method.POST, schema: 'schema2.xsd'])
+            assertMockReport(mockReport[0], [name: 'testRest', path: 'testEndpoint', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: false, statusCode: 200, method: Method.POST, schema: 'schema2.xsd', preserveHistory: true])
             assertMockReport(mockReport[1], [name: 'testRest2', path: 'testEndpoint', port: 9998, predicate: '''{ req -> req.xml.name() == 'request1'}''', response: '''{ req -> '<response/>' }''', responseHeaders: '{ _ -> [a: "b"] }', soap: false, statusCode: 200, method: Method.POST])
             assertMockReport(mockReport[2], [name: 'testRest3', path: 'testEndpoint2', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: false, statusCode: 200, method: Method.POST])
             assertMockReport(mockReport[3], [name: 'testRest4', path: 'testEndpoint', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: true, statusCode: 204, method: Method.PUT])
             assertMockReport(mockReport[4], [name: 'testRest6', path: 'testEndpoint2', port: 9999, predicate: '{ _ -> true }', response: '''{ _ -> '' }''', responseHeaders: '{ _ -> [:] }', soap: false, statusCode: 200, method: Method.POST])
             mockReport[0].imports.find { it.alias == 'aaa' }?.fullClassName == 'bbb'
             mockReport[0].imports.find { it.alias == 'ccc' }?.fullClassName == 'bla'
+    }
+
+    def "should add mock without history"() {
+        expect:
+            remoteMockServer.addMock(new AddMock(
+                name: 'testRest',
+                path: 'testEndpoint',
+                port: 9999,
+                predicate: '''{req -> req.xml.name() == 'request'}''',
+                response: '''{req -> "<goodResponseRest-${req.xml.name()}/>"}''',
+                soap: false,
+                preserveHistory: false
+            ))
+        when:
+            HttpPost restPost = new HttpPost('http://localhost:9999/testEndpoint')
+            restPost.entity = new StringEntity('<request/>', ContentType.create("text/xml", "UTF-8"))
+            CloseableHttpResponse response = client.execute(restPost)
+        then:
+            GPathResult restPostResponse = Util.extractXmlResponse(response)
+            restPostResponse.name() == 'goodResponseRest-request'
+        expect:
+            remoteMockServer.removeMock('testRest')?.size() == 0
     }
 
 }

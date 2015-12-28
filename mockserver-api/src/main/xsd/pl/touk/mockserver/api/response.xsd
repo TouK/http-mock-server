@@ -110,6 +110,7 @@
             <xs:element name="statusCode" type="xs:int"/>
             <xs:element name="schema" type="xs:string" minOccurs="0"/>
             <xs:element name="imports" type="common:importAlias" minOccurs="0" maxOccurs="unbounded"/>
+            <xs:element name="preserveHistory" type="xs:boolean" minOccurs="0"/>
         </xs:sequence>
     </xs:complexType>
 

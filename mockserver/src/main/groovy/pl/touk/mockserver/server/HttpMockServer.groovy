@@ -74,21 +74,22 @@ class HttpMockServer {
 
     void listMocks(HttpExchange ex) {
         Mocks mockListing = new Mocks(
-                mocks: listMocks().collect {
-                    new MockReport(
-                            name: it.name,
-                            path: it.path,
-                            port: it.port,
-                            predicate: it.predicateClosureText,
-                            response: it.responseClosureText,
-                            responseHeaders: it.responseHeadersClosureText,
-                            soap: it.soap,
-                            method: it.method,
-                            statusCode: it.statusCode as int,
-                            schema: it.schema,
-                            imports: it.imports.collect { new ImportAlias(alias: it.key, fullClassName: it.value) }
-                    )
-                }
+            mocks: listMocks().collect {
+                new MockReport(
+                    name: it.name,
+                    path: it.path,
+                    port: it.port,
+                    predicate: it.predicateClosureText,
+                    response: it.responseClosureText,
+                    responseHeaders: it.responseHeadersClosureText,
+                    soap: it.soap,
+                    method: it.method,
+                    statusCode: it.statusCode as int,
+                    schema: it.schema,
+                    imports: it.imports.collect { new ImportAlias(alias: it.key, fullClassName: it.value) },
+                    preserveHistory: it.preserveHistory
+                )
+            }
         )
         createResponse(ex, mockListing, 200)
     }
@@ -150,6 +151,7 @@ class HttpMockServer {
         mock.method = request.method
         mock.responseHeaders = request.responseHeaders
         mock.schema = request.schema
+        mock.preserveHistory = request.preserveHistory != false
         return mock
     }
 
@@ -163,6 +165,7 @@ class HttpMockServer {
         mock.method = co.method ? Method.valueOf(co.method) : null
         mock.responseHeaders = co.responseHeaders ?: null
         mock.schema = co.schema ?: null
+        mock.preserveHistory = co.preserveHistory != false
         return mock
     }
 
@@ -188,7 +191,7 @@ class HttpMockServer {
         mockNames.remove(name)
         configuration.remove(name)
         MockRemoved mockRemoved = new MockRemoved(
-                mockEvents: createMockEventReports(mockEvents)
+            mockEvents: createMockEventReports(mockEvents)
         )
         createResponse(ex, mockRemoved, 200)
     }
@@ -196,23 +199,23 @@ class HttpMockServer {
     private static List<MockEventReport> createMockEventReports(List<MockEvent> mockEvents) {
         return mockEvents.collect {
             new MockEventReport(
-                    request: new MockRequestReport(
-                            text: it.request.text,
-                            headers: new MockRequestReport.Headers(headers: it.request.headers.collect {
-                                new Parameter(name: it.key, value: it.value)
-                            }),
-                            queryParams: new MockRequestReport.QueryParams(queryParams: it.request.query.collect {
-                                new Parameter(name: it.key, value: it.value)
-                            }),
-                            path: new MockRequestReport.Path(pathParts: it.request.path)
-                    ),
-                    response: new MockResponseReport(
-                            statusCode: it.response.statusCode,
-                            text: it.response.text,
-                            headers: new MockResponseReport.Headers(headers: it.response.headers.collect {
-                                new Parameter(name: it.key, value: it.value)
-                            })
-                    )
+                request: new MockRequestReport(
+                    text: it.request.text,
+                    headers: new MockRequestReport.Headers(headers: it.request.headers.collect {
+                        new Parameter(name: it.key, value: it.value)
+                    }),
+                    queryParams: new MockRequestReport.QueryParams(queryParams: it.request.query.collect {
+                        new Parameter(name: it.key, value: it.value)
+                    }),
+                    path: new MockRequestReport.Path(pathParts: it.request.path)
+                ),
+                response: new MockResponseReport(
+                    statusCode: it.response.statusCode,
+                    text: it.response.text,
+                    headers: new MockResponseReport.Headers(headers: it.response.headers.collect {
+                        new Parameter(name: it.key, value: it.value)
+                    })
+                )
             )
         }
     }
@@ -225,7 +228,7 @@ class HttpMockServer {
         log.trace("Peeking mock $name")
         List<MockEvent> mockEvents = childServers.values().collect { it.peekMock(name) }.flatten() as List<MockEvent>
         MockPeeked mockPeeked = new MockPeeked(
-                mockEvents: createMockEventReports(mockEvents)
+            mockEvents: createMockEventReports(mockEvents)
         )
         createResponse(ex, mockPeeked, 200)
     }
