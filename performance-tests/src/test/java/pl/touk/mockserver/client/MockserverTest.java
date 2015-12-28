@@ -6,8 +6,16 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClients;
-import org.openjdk.jmh.annotations.*;
-import org.openjdk.jmh.infra.BenchmarkParams;
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Measurement;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.TearDown;
+import org.openjdk.jmh.annotations.Warmup;
 import org.openjdk.jmh.infra.Blackhole;
 import org.openjdk.jmh.infra.ThreadParams;
 import pl.touk.mockserver.api.request.AddMock;
@@ -21,11 +29,10 @@ import java.util.concurrent.TimeUnit;
 public class MockserverTest {
     HttpMockServer httpMockServer;
 
-    @Param({"9000", "8000"})
-    int initialPort;
+    int initialPort = 9000;
 
     @Setup
-    public void prepareMockServer(BenchmarkParams params) {
+    public void prepareMockServer() {
         httpMockServer = new HttpMockServer(9999);
     }
 
@@ -49,11 +56,9 @@ public class MockserverTest {
     }
 
     @Benchmark
-    @Measurement(iterations = 10)
-    @Fork(value = 2)
+    @Measurement(iterations = 20)
     @BenchmarkMode({Mode.AverageTime, Mode.Throughput, Mode.SampleTime})
-    @Warmup(iterations = 5)
-    @Threads(4)
+    @Warmup(iterations = 10)
     public void shouldHandleManyRequestsSimultaneously(TestState testState, Blackhole bh) throws IOException {
         int current = testState.current;
         int endpointNumber = current % 10;
