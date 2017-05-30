@@ -27,6 +27,9 @@ class MockRequest {
     }
 
     private static GPathResult inputToXml(String text) {
+        if (!text.startsWith('<')) {
+            return null
+        }
         try {
             return new XmlSlurper().parseText(text)
         } catch (Exception _) {
@@ -36,7 +39,7 @@ class MockRequest {
 
     private static GPathResult inputToSoap(GPathResult xml) {
         try {
-            if (xml.name() == 'Envelope' && xml.Body.size() > 0) {
+            if (xml != null && xml.name() == 'Envelope' && xml.Body.size() > 0) {
                 return getSoapBodyContent(xml)
             } else {
                 return null
@@ -51,6 +54,9 @@ class MockRequest {
     }
 
     private static Object inputToJson(String text) {
+        if (!text.startsWith('[') &&  !text.startsWith('{')) {
+            return null
+        }
         try {
             return new JsonSlurper().parseText(text)
         } catch (Exception _) {
