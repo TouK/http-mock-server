@@ -21,9 +21,11 @@ class Main {
     private static HttpMockServer startMockServer(String... args) {
         switch (args.length) {
             case 1:
-                return new HttpMockServer(args[0] as int)
+                return new HttpMockServer(args[0] as int, new ConfigObject())
             case 2:
                 return new HttpMockServer(args[0] as int, new ConfigSlurper().parse(new File(args[1]).toURI().toURL()))
+            case 3:
+                return new HttpMockServer(args[0] as int, new ConfigSlurper().parse(new File(args[1]).toURI().toURL()), args[2] as int)
             default:
                 return new HttpMockServer()
         }

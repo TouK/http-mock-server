@@ -22,6 +22,8 @@ import pl.touk.mockserver.api.response.Parameter
 import javax.xml.bind.JAXBContext
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArraySet
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
 
 import static pl.touk.mockserver.server.Util.createResponse
 
@@ -32,12 +34,14 @@ class HttpMockServer {
     private final Map<Integer, HttpServerWraper> childServers = new ConcurrentHashMap<>()
     private final Set<String> mockNames = new CopyOnWriteArraySet<>()
     private final ConfigObject configuration = new ConfigObject()
+    private final Executor executor
 
     private static
     final JAXBContext requestJaxbContext = JAXBContext.newInstance(AddMock.package.name, AddMock.classLoader)
 
-    HttpMockServer(int port = 9999, ConfigObject initialConfiguration = new ConfigObject()) {
-        httpServerWraper = new HttpServerWraper(port)
+    HttpMockServer(int port = 9999, ConfigObject initialConfiguration = new ConfigObject(), int threads = 10) {
+        executor = Executors.newFixedThreadPool(threads)
+        httpServerWraper = new HttpServerWraper(port, executor)
 
         initialConfiguration.values()?.each { ConfigObject co ->
             addMock(co)
@@ -172,7 +176,7 @@ class HttpMockServer {
     private HttpServerWraper getOrCreateChildServer(int mockPort) {
         HttpServerWraper child = childServers[mockPort]
         if (!child) {
-            child = new HttpServerWraper(mockPort)
+            child = new HttpServerWraper(mockPort, executor)
             childServers.put(mockPort, child)
         }
         return child

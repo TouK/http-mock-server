@@ -5,7 +5,7 @@ import com.sun.net.httpserver.HttpServer
 import groovy.transform.PackageScope
 import groovy.util.logging.Slf4j
 
-import java.util.concurrent.Executors
+import java.util.concurrent.Executor
 
 @Slf4j
 @PackageScope
@@ -15,11 +15,11 @@ class HttpServerWraper {
 
     private List<ContextExecutor> executors = []
 
-    HttpServerWraper(int port) {
+    HttpServerWraper(int port, Executor executor) {
         this.port = port
         InetSocketAddress addr = new InetSocketAddress(Inet4Address.getByName("0.0.0.0"), port)
         httpServer = HttpServer.create(addr, 0)
-        httpServer.executor = Executors.newWorkStealingPool()
+        httpServer.executor = executor
         log.info("Http server starting on port $port...")
         httpServer.start()
         log.info('Http server is started')

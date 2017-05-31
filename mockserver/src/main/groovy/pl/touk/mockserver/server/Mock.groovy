@@ -103,7 +103,9 @@ class Mock implements Comparable<Mock> {
         }
         compilerConfiguration.addCompilationCustomizers(customizer)
         GroovyShell sh = new GroovyShell(this.class.classLoader, compilerConfiguration);
-        return sh.evaluate(predicate) as Closure
+        Closure closure = sh.evaluate(predicate) as Closure
+        sh.resetLoadedClasses()
+        return closure
     }
 
     void setResponse(String response) {
