@@ -20,26 +20,37 @@ class ContextExecutor {
         this.mocks = new CopyOnWriteArrayList<>([initialMock])
         httpServerWraper.createContext(path) {
             HttpExchange ex ->
-                MockRequest request = new MockRequest(ex.requestBody.text, ex.requestHeaders, ex.requestURI)
-                log.info('Mock received input')
-                log.debug("Request: ${request.text}")
-                for (Mock mock : mocks) {
-                    try {
-                        if (mock.match(Method.valueOf(ex.requestMethod), request)) {
-                            log.debug("Mock ${mock.name} match request ${request.text}")
-                            MockResponse httpResponse = mock.apply(request)
-                            fillExchange(ex, httpResponse)
-                            log.trace("Mock ${mock.name} response with body ${httpResponse.text}")
-                            return
-                        }
-                        log.debug("Mock ${mock.name} does not match request")
-                    } catch (Exception e) {
-                        log.warn("An exception occured when matching or applying mock ${mock.name}", e)
-                    }
+                try {
+                    applyMocks(ex)
+                } catch (Exception e) {
+                    log.error("Exceptiony occured handling request", e)
+                    throw e
+                } finally {
+                    ex.close()
                 }
-                log.warn("Any mock does not match request ${request.text}")
-                Util.createResponse(ex, request.text, 404)
         }
+    }
+
+    private void applyMocks(HttpExchange ex) {
+        MockRequest request = new MockRequest(ex.requestBody.text, ex.requestHeaders, ex.requestURI)
+        log.info('Mock received input')
+        log.debug("Request: ${request.text}")
+        for (Mock mock : mocks) {
+            try {
+                if (mock.match(Method.valueOf(ex.requestMethod), request)) {
+                    log.debug("Mock ${mock.name} match request ${request.text}")
+                    MockResponse httpResponse = mock.apply(request)
+                    fillExchange(ex, httpResponse)
+                    log.trace("Mock ${mock.name} response with body ${httpResponse.text}")
+                    return
+                }
+                log.debug("Mock ${mock.name} does not match request")
+            } catch (Exception e) {
+                log.warn("An exception occured when matching or applying mock ${mock.name}", e)
+            }
+        }
+        log.warn("Any mock does not match request ${request.text}")
+        Util.createResponse(ex, request.text, 404)
     }
 
     String getPath() {

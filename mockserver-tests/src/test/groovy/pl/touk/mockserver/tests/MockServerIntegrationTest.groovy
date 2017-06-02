@@ -1114,4 +1114,23 @@ class MockServerIntegrationTest extends Specification {
             remoteMockServer.removeMock('testRest')?.size() == 0
     }
 
+    def "should handle empty post"() {
+        expect:
+            remoteMockServer.addMock(new AddMock(
+                name: 'testRest',
+                path: 'testEndpoint',
+                port: 9999,
+                statusCode: 201,
+                soap: false
+            ))
+        when:
+            HttpPost restPost = new HttpPost('http://localhost:9999/testEndpoint')
+            CloseableHttpResponse response = client.execute(restPost)
+        then:
+            response.statusLine.statusCode == 201
+            Util.consumeResponse(response)
+        expect:
+            remoteMockServer.removeMock('testRest')?.size() == 1
+    }
+
 }
