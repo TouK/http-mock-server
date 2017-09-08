@@ -1133,4 +1133,33 @@ class MockServerIntegrationTest extends Specification {
             remoteMockServer.removeMock('testRest')?.size() == 1
     }
 
+    @Unroll
+    def 'should handle leading slash'() {
+        given:
+            String name = "testRest-${UUID.randomUUID().toString()}"
+        expect:
+            remoteMockServer.addMock(new AddMock(
+                name: name,
+                path: mockPath,
+                port: 9999,
+                statusCode: 201,
+                soap: false
+            ))
+        when:
+            HttpPost restPost = new HttpPost("http://localhost:9999/$urlPath")
+            CloseableHttpResponse response = client.execute(restPost)
+        then:
+            response.statusLine.statusCode == 201
+            Util.consumeResponse(response)
+        expect:
+            remoteMockServer.removeMock(name)?.size() == 1
+        where:
+            mockPath       | urlPath
+            ''             | ''
+            '/'             | ''
+            'test'         | 'test'
+            '/test'        | 'test'
+            'test/other'   | 'test/other'
+            '/test/other'  | 'test/other'
+    }
 }
