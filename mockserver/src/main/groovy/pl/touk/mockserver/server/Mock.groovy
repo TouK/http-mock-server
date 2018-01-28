@@ -41,11 +41,11 @@ class Mock implements Comparable<Mock> {
             throw new RuntimeException("Mock name must be given")
         }
         this.name = name
-        this.path = stripLeadingPath(path)
+        this.path = stripLeadingSlash(path)
         this.port = port
     }
 
-    private static String stripLeadingPath(String path) {
+    private static String stripLeadingSlash(String path) {
         if (path?.startsWith('/')) {
             return path - '/'
         } else {
