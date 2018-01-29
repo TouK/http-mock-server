@@ -9,13 +9,13 @@ import java.util.concurrent.Executor
 
 @Slf4j
 @PackageScope
-class HttpServerWraper {
+class HttpServerWrapper {
     private final HttpServer httpServer
     final int port
 
     private List<ContextExecutor> executors = []
 
-    HttpServerWraper(int port, Executor executor) {
+    HttpServerWrapper(int port, Executor executor) {
         this.port = port
         InetSocketAddress addr = new InetSocketAddress(Inet4Address.getByName("0.0.0.0"), port)
         httpServer = HttpServer.create(addr, 0)

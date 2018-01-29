@@ -30,8 +30,8 @@ import static pl.touk.mockserver.server.Util.createResponse
 @Slf4j
 class HttpMockServer {
 
-    private final HttpServerWraper httpServerWraper
-    private final Map<Integer, HttpServerWraper> childServers = new ConcurrentHashMap<>()
+    private final HttpServerWrapper httpServerWrapper
+    private final Map<Integer, HttpServerWrapper> childServers = new ConcurrentHashMap<>()
     private final Set<String> mockNames = new CopyOnWriteArraySet<>()
     private final ConfigObject configuration = new ConfigObject()
     private final Executor executor
@@ -41,13 +41,13 @@ class HttpMockServer {
 
     HttpMockServer(int port = 9999, ConfigObject initialConfiguration = new ConfigObject(), int threads = 10) {
         executor = Executors.newFixedThreadPool(threads)
-        httpServerWraper = new HttpServerWraper(port, executor)
+        httpServerWrapper = new HttpServerWrapper(port, executor)
 
         initialConfiguration.values()?.each { ConfigObject co ->
             addMock(co)
         }
 
-        httpServerWraper.createContext('/serverControl', {
+        httpServerWrapper.createContext('/serverControl', {
             HttpExchange ex ->
                 try {
                     if (ex.requestMethod == 'GET') {
@@ -108,7 +108,7 @@ class HttpMockServer {
             throw new RuntimeException('mock already registered')
         }
         Mock mock = mockFromRequest(request)
-        HttpServerWraper child = getOrCreateChildServer(mock.port)
+        HttpServerWrapper child = getOrCreateChildServer(mock.port)
         child.addMock(mock)
         saveConfiguration(request)
         mockNames << name
@@ -121,7 +121,7 @@ class HttpMockServer {
             throw new RuntimeException('mock already registered')
         }
         Mock mock = mockFromConfig(co)
-        HttpServerWraper child = getOrCreateChildServer(mock.port)
+        HttpServerWrapper child = getOrCreateChildServer(mock.port)
         child.addMock(mock)
         configuration.put(name, co)
         mockNames << name
@@ -173,10 +173,10 @@ class HttpMockServer {
         return mock
     }
 
-    private HttpServerWraper getOrCreateChildServer(int mockPort) {
-        HttpServerWraper child = childServers[mockPort]
+    private HttpServerWrapper getOrCreateChildServer(int mockPort) {
+        HttpServerWrapper child = childServers[mockPort]
         if (!child) {
-            child = new HttpServerWraper(mockPort, executor)
+            child = new HttpServerWrapper(mockPort, executor)
             childServers.put(mockPort, child)
         }
         return child
@@ -244,6 +244,6 @@ class HttpMockServer {
 
     void stop() {
         childServers.values().each { it.stop() }
-        httpServerWraper.stop()
+        httpServerWrapper.stop()
     }
 }

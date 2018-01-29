@@ -10,15 +10,15 @@ import java.util.concurrent.CopyOnWriteArrayList
 @Slf4j
 @PackageScope
 class ContextExecutor {
-    private final HttpServerWraper httpServerWraper
+    private final HttpServerWrapper httpServerWrapper
     final String path
     private final List<Mock> mocks
 
-    ContextExecutor(HttpServerWraper httpServerWraper, Mock initialMock) {
-        this.httpServerWraper = httpServerWraper
+    ContextExecutor(HttpServerWrapper httpServerWrapper, Mock initialMock) {
+        this.httpServerWrapper = httpServerWrapper
         this.path = "/${initialMock.path}"
         this.mocks = new CopyOnWriteArrayList<>([initialMock])
-        httpServerWraper.createContext(path) {
+        httpServerWrapper.createContext(path) {
             HttpExchange ex ->
                 try {
                     applyMocks(ex)
