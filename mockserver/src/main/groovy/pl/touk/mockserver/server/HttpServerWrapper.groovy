@@ -2,15 +2,16 @@ package pl.touk.mockserver.server
 
 import com.sun.net.httpserver.HttpHandler
 import com.sun.net.httpserver.HttpServer
-import com.sun.net.httpserver.HttpsConfigurator
 import com.sun.net.httpserver.HttpsServer
 import groovy.transform.PackageScope
 import groovy.util.logging.Slf4j
 import pl.touk.mockserver.api.common.Https
 
+import javax.net.ssl.KeyManager
 import javax.net.ssl.KeyManagerFactory
 import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManager
+import javax.net.ssl.TrustManagerFactory
 import java.security.KeyStore
 import java.security.SecureRandom
 import java.util.concurrent.Executor
@@ -36,7 +37,7 @@ class HttpServerWrapper {
     private HttpServer buildServer(InetSocketAddress addr, Https https) {
         if (https) {
             HttpsServer httpsServer = HttpsServer.create(addr, 0)
-            httpsServer.httpsConfigurator = new HttpsConfigurator(buildSslContext(https))
+            httpsServer.httpsConfigurator = new HttpsConfig(buildSslContext(https), https)
             return httpsServer
         } else {
             return HttpServer.create(addr, 0)
@@ -44,14 +45,32 @@ class HttpServerWrapper {
     }
 
     private SSLContext buildSslContext(Https https) {
+        KeyManager[] keyManagers = buildKeyManager(https)
+        TrustManager[] trustManagers = buildTrustManager(https)
+
+        SSLContext ssl = SSLContext.getInstance('TLSv1')
+        ssl.init(keyManagers, trustManagers, new SecureRandom())
+        return ssl
+    }
+
+    private KeyManager[] buildKeyManager(Https https) {
         KeyStore keyStore = KeyStore.getInstance(KeyStore.defaultType)
         keyStore.load(new FileInputStream(https.keystorePath), https.keystorePassword.toCharArray())
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.defaultAlgorithm)
         kmf.init(keyStore, https.keyPassword.toCharArray())
+        return kmf.keyManagers
+    }
 
-        SSLContext ssl = SSLContext.getInstance('TLSv1')
-        ssl.init(kmf.keyManagers, [] as TrustManager[], new SecureRandom())
-        return ssl
+    private TrustManager[] buildTrustManager(Https https) {
+        if (https.requireClientAuth) {
+            KeyStore trustStore = KeyStore.getInstance(KeyStore.defaultType)
+            trustStore.load(new FileInputStream(https.truststorePath), https.truststorePassword.toCharArray())
+            TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.defaultAlgorithm)
+            tmf.init(trustStore)
+            return tmf.trustManagers
+        } else {
+            return []
+        }
     }
 
     void createContext(String context, HttpHandler handler) {

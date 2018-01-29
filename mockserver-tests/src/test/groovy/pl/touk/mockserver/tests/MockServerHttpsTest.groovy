@@ -16,8 +16,10 @@ import pl.touk.mockserver.client.Util
 import pl.touk.mockserver.server.HttpMockServer
 import spock.lang.Shared
 import spock.lang.Specification
+import spock.lang.Unroll
 
 import javax.net.ssl.SSLContext
+import javax.net.ssl.SSLHandshakeException
 import java.security.KeyStore
 
 class MockServerHttpsTest extends Specification {
@@ -27,14 +29,20 @@ class MockServerHttpsTest extends Specification {
     HttpMockServer httpMockServer
 
     @Shared
-    SSLContext sslContext = SSLContexts.custom()
+    SSLContext noClientAuthSslContext = SSLContexts.custom()
         .loadTrustMaterial(trustStore())
         .build()
 
     @Shared
-    CloseableHttpClient client = HttpClients.custom()
-        .setHostnameVerifier(SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER)
-        .setSslcontext(sslContext)
+    SSLContext trustedCertificateSslContext = SSLContexts.custom()
+        .loadKeyMaterial(trustedCertificateKeystore(), 'changeit'.toCharArray())
+        .loadTrustMaterial(trustStore())
+        .build()
+
+    @Shared
+    SSLContext untrustedCertificateSslContext = SSLContexts.custom()
+        .loadKeyMaterial(untrustedCertificateKeystore(), 'changeit'.toCharArray())
+        .loadTrustMaterial(trustStore())
         .build()
 
     def setup() {
@@ -64,17 +72,90 @@ class MockServerHttpsTest extends Specification {
         when:
             HttpPost restPost = new HttpPost('https://localhost:10443/testEndpoint')
             restPost.entity = new StringEntity('<request/>', ContentType.create("text/xml", "UTF-8"))
-            CloseableHttpResponse response = client.execute(restPost)
+            CloseableHttpResponse response = client(noClientAuthSslContext).execute(restPost)
         then:
             GPathResult restPostResponse = Util.extractXmlResponse(response)
             restPostResponse.name() == 'goodResponse-request'
-        and:
-            remoteMockServer.removeMock('testHttps')?.size() == 1
+    }
+
+    def 'should handle HTTPS server with client auth' () {
+        expect:
+            remoteMockServer.addMock(new AddMock(
+                name: 'testHttps',
+                path: 'testEndpoint',
+                port: 10443,
+                predicate: '''{req -> req.xml.name() == 'request'}''',
+                response: '''{req -> "<goodResponse-${req.xml.name()}/>"}''',
+                https: new Https(
+                    keyPassword: 'changeit',
+                    keystorePassword: 'changeit',
+                    keystorePath: MockServerHttpsTest.classLoader.getResource('keystore.jks').path,
+                    truststorePath: MockServerHttpsTest.classLoader.getResource('truststore.jks').path,
+                    truststorePassword: 'changeit',
+                    requireClientAuth: true
+                ),
+                soap: false
+            ))
+        when:
+            HttpPost restPost = new HttpPost('https://localhost:10443/testEndpoint')
+            restPost.entity = new StringEntity('<request/>', ContentType.create("text/xml", "UTF-8"))
+            CloseableHttpResponse response = client(trustedCertificateSslContext).execute(restPost)
+        then:
+            GPathResult restPostResponse = Util.extractXmlResponse(response)
+            restPostResponse.name() == 'goodResponse-request'
+    }
+
+    @Unroll
+    def 'should handle HTTPS server with wrong client auth' () {
+        expect:
+            remoteMockServer.addMock(new AddMock(
+                name: 'testHttps',
+                path: 'testEndpoint',
+                port: 10443,
+                predicate: '''{req -> req.xml.name() == 'request'}''',
+                response: '''{req -> "<goodResponse-${req.xml.name()}/>"}''',
+                https: new Https(
+                    keyPassword: 'changeit',
+                    keystorePassword: 'changeit',
+                    keystorePath: MockServerHttpsTest.classLoader.getResource('keystore.jks').path,
+                    truststorePath: MockServerHttpsTest.classLoader.getResource('truststore.jks').path,
+                    truststorePassword: 'changeit',
+                    requireClientAuth: true
+                ),
+                soap: false
+            ))
+        when:
+            HttpPost restPost = new HttpPost('https://localhost:10443/testEndpoint')
+            restPost.entity = new StringEntity('<request/>', ContentType.create("text/xml", "UTF-8"))
+            client(sslContext).execute(restPost)
+        then:
+            thrown(SSLHandshakeException)
+        where:
+            sslContext << [noClientAuthSslContext, untrustedCertificateSslContext]
+    }
+
+    private CloseableHttpClient client(SSLContext sslContext) {
+        return HttpClients.custom()
+            .setHostnameVerifier(SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER)
+            .setSslcontext(sslContext)
+            .build()
+    }
+
+    private KeyStore trustedCertificateKeystore() {
+        return loadKeystore('trusted.jks')
+    }
+
+    private KeyStore untrustedCertificateKeystore() {
+        return loadKeystore('untrusted.jks')
     }
 
     private KeyStore trustStore() {
-        KeyStore truststore  = KeyStore.getInstance(KeyStore.defaultType)
-        truststore.load(new FileInputStream(MockServerHttpsTest.classLoader.getResource('truststore.jks').path), "changeit".toCharArray());
+        return loadKeystore('truststore.jks')
+    }
+
+    private KeyStore loadKeystore(String fileName) {
+        KeyStore truststore = KeyStore.getInstance(KeyStore.defaultType)
+        truststore.load(new FileInputStream(MockServerHttpsTest.classLoader.getResource(fileName).path), "changeit".toCharArray());
         return truststore
     }
 }
