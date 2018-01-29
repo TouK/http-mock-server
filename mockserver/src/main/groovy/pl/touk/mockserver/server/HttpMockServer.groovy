@@ -2,6 +2,7 @@ package pl.touk.mockserver.server
 
 import com.sun.net.httpserver.HttpExchange
 import groovy.util.logging.Slf4j
+import pl.touk.mockserver.api.common.Https
 import pl.touk.mockserver.api.common.ImportAlias
 import pl.touk.mockserver.api.common.Method
 import pl.touk.mockserver.api.request.AddMock
@@ -41,7 +42,7 @@ class HttpMockServer {
 
     HttpMockServer(int port = 9999, ConfigObject initialConfiguration = new ConfigObject(), int threads = 10) {
         executor = Executors.newFixedThreadPool(threads)
-        httpServerWrapper = new HttpServerWrapper(port, executor)
+        httpServerWrapper = new HttpServerWrapper(port, executor, null)
 
         initialConfiguration.values()?.each { ConfigObject co ->
             addMock(co)
@@ -108,7 +109,7 @@ class HttpMockServer {
             throw new RuntimeException('mock already registered')
         }
         Mock mock = mockFromRequest(request)
-        HttpServerWrapper child = getOrCreateChildServer(mock.port)
+        HttpServerWrapper child = getOrCreateChildServer(mock.port, mock.https)
         child.addMock(mock)
         saveConfiguration(request)
         mockNames << name
@@ -121,7 +122,7 @@ class HttpMockServer {
             throw new RuntimeException('mock already registered')
         }
         Mock mock = mockFromConfig(co)
-        HttpServerWrapper child = getOrCreateChildServer(mock.port)
+        HttpServerWrapper child = getOrCreateChildServer(mock.port, null)
         child.addMock(mock)
         configuration.put(name, co)
         mockNames << name
@@ -156,6 +157,7 @@ class HttpMockServer {
         mock.responseHeaders = request.responseHeaders
         mock.schema = request.schema
         mock.preserveHistory = request.preserveHistory != false
+        mock.https = request.https
         return mock
     }
 
@@ -173,10 +175,10 @@ class HttpMockServer {
         return mock
     }
 
-    private HttpServerWrapper getOrCreateChildServer(int mockPort) {
+    private HttpServerWrapper getOrCreateChildServer(int mockPort, Https https) {
         HttpServerWrapper child = childServers[mockPort]
         if (!child) {
-            child = new HttpServerWrapper(mockPort, executor)
+            child = new HttpServerWrapper(mockPort, executor, https)
             childServers.put(mockPort, child)
         }
         return child
