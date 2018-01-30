@@ -42,7 +42,7 @@ class HttpMockServer {
 
     HttpMockServer(int port = 9999, ConfigObject initialConfiguration = new ConfigObject(), int threads = 10) {
         executor = Executors.newFixedThreadPool(threads)
-        httpServerWrapper = new HttpServerWrapper(port, executor, null)
+        httpServerWrapper = new HttpServerWrapper(port, executor)
 
         initialConfiguration.values()?.each { ConfigObject co ->
             addMock(co)

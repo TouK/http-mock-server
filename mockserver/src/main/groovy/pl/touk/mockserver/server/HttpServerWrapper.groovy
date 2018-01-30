@@ -24,7 +24,7 @@ class HttpServerWrapper {
 
     private List<ContextExecutor> executors = []
 
-    HttpServerWrapper(int port, Executor executor, Https https) {
+    HttpServerWrapper(int port, Executor executor, Https https = null) {
         this.port = port
         InetSocketAddress addr = new InetSocketAddress(Inet4Address.getByName("0.0.0.0"), port)
         httpServer = buildServer(addr, https)

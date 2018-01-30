@@ -16,7 +16,6 @@ import pl.touk.mockserver.client.Util
 import pl.touk.mockserver.server.HttpMockServer
 import spock.lang.Shared
 import spock.lang.Specification
-import spock.lang.Unroll
 
 import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLHandshakeException
@@ -24,9 +23,9 @@ import java.security.KeyStore
 
 class MockServerHttpsTest extends Specification {
 
-    RemoteMockServer remoteMockServer
+    RemoteMockServer remoteMockServer = new RemoteMockServer('localhost', 19000)
 
-    HttpMockServer httpMockServer
+    HttpMockServer httpMockServer = new HttpMockServer(19000)
 
     @Shared
     SSLContext noClientAuthSslContext = SSLContexts.custom()
@@ -45,17 +44,12 @@ class MockServerHttpsTest extends Specification {
         .loadTrustMaterial(trustStore())
         .build()
 
-    def setup() {
-        httpMockServer = new HttpMockServer(19000)
-        remoteMockServer = new RemoteMockServer('localhost', 19000)
-    }
-
     def cleanup() {
         httpMockServer.stop()
     }
 
     def 'should handle HTTPS server' () {
-        expect:
+        given:
             remoteMockServer.addMock(new AddMock(
                     name: 'testHttps',
                     path: 'testEndpoint',
@@ -79,7 +73,7 @@ class MockServerHttpsTest extends Specification {
     }
 
     def 'should handle HTTPS server with client auth' () {
-        expect:
+        given:
             remoteMockServer.addMock(new AddMock(
                 name: 'testHttps',
                 path: 'testEndpoint',
@@ -105,9 +99,8 @@ class MockServerHttpsTest extends Specification {
             restPostResponse.name() == 'goodResponse-request'
     }
 
-    @Unroll
     def 'should handle HTTPS server with wrong client auth' () {
-        expect:
+        given:
             remoteMockServer.addMock(new AddMock(
                 name: 'testHttps',
                 path: 'testEndpoint',
