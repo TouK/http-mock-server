@@ -54,7 +54,7 @@ class HttpServerWrapper {
     }
 
     private KeyManager[] buildKeyManager(Https https) {
-        KeyStore keyStore = KeyStore.getInstance(KeyStore.defaultType)
+        KeyStore keyStore = KeyStore.getInstance('jks')
         keyStore.load(new FileInputStream(https.keystorePath), https.keystorePassword.toCharArray())
         KeyManagerFactory kmf = KeyManagerFactory.getInstance(KeyManagerFactory.defaultAlgorithm)
         kmf.init(keyStore, https.keyPassword.toCharArray())
@@ -63,7 +63,7 @@ class HttpServerWrapper {
 
     private TrustManager[] buildTrustManager(Https https) {
         if (https.requireClientAuth) {
-            KeyStore trustStore = KeyStore.getInstance(KeyStore.defaultType)
+            KeyStore trustStore = KeyStore.getInstance('jks')
             trustStore.load(new FileInputStream(https.truststorePath), https.truststorePassword.toCharArray())
             TrustManagerFactory tmf = TrustManagerFactory.getInstance(TrustManagerFactory.defaultAlgorithm)
             tmf.init(trustStore)

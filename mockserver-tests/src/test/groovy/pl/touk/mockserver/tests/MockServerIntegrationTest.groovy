@@ -27,6 +27,7 @@ import pl.touk.mockserver.client.MockDoesNotExist
 import pl.touk.mockserver.client.RemoteMockServer
 import pl.touk.mockserver.client.Util
 import pl.touk.mockserver.server.HttpMockServer
+import spock.lang.AutoCleanup
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -34,6 +35,7 @@ class MockServerIntegrationTest extends Specification {
 
     RemoteMockServer remoteMockServer
 
+    @AutoCleanup('stop')
     HttpMockServer httpMockServer
 
     @Shared
@@ -42,10 +44,6 @@ class MockServerIntegrationTest extends Specification {
     def setup() {
         httpMockServer = new HttpMockServer(9000)
         remoteMockServer = new RemoteMockServer('localhost', 9000)
-    }
-
-    def cleanup() {
-        httpMockServer.stop()
     }
 
     def "should add working rest mock on endpoint"() {
