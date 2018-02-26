@@ -122,7 +122,7 @@ class HttpMockServer {
             throw new RuntimeException('mock already registered')
         }
         Mock mock = mockFromConfig(co)
-        HttpServerWrapper child = getOrCreateChildServer(mock.port, null)
+        HttpServerWrapper child = getOrCreateChildServer(mock.port, mock.https)
         child.addMock(mock)
         configuration.put(name, co)
         mockNames << name
@@ -172,6 +172,16 @@ class HttpMockServer {
         mock.responseHeaders = co.responseHeaders ?: null
         mock.schema = co.schema ?: null
         mock.preserveHistory = co.preserveHistory != false
+        if (co.https) {
+            mock.https = new Https(
+                keystorePath: co.https.keystorePath ?: null,
+                keystorePassword: co.https.keystorePassword,
+                keyPassword: co.https.keyPassword,
+                truststorePath: co.https.truststorePath,
+                truststorePassword: co.https.truststorePassword,
+                requireClientAuth: co.https?.requireClientAuth?.asBoolean() ?: false
+            )
+        }
         return mock
     }
 

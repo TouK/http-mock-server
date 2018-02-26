@@ -14,6 +14,7 @@ import pl.touk.mockserver.api.request.AddMock
 import pl.touk.mockserver.client.RemoteMockServer
 import pl.touk.mockserver.client.Util
 import pl.touk.mockserver.server.HttpMockServer
+import spock.lang.AutoCleanup
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -25,6 +26,7 @@ class MockServerHttpsTest extends Specification {
 
     RemoteMockServer remoteMockServer = new RemoteMockServer('localhost', 19000)
 
+    @AutoCleanup('stop')
     HttpMockServer httpMockServer = new HttpMockServer(19000)
 
     @Shared
@@ -43,10 +45,6 @@ class MockServerHttpsTest extends Specification {
         .loadKeyMaterial(untrustedCertificateKeystore(), 'changeit'.toCharArray())
         .loadTrustMaterial(trustStore())
         .build()
-
-    def cleanup() {
-        httpMockServer.stop()
-    }
 
     def 'should handle HTTPS server' () {
         given:
