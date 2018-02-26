@@ -64,6 +64,21 @@ testRest {
 	path='testEndpoint'
 	name='testRest'
 }
+testHttps {
+    soap=false
+    port=10443
+    path='testHttps'
+    name='testHttps'
+    method='GET'
+    https={
+        keystorePath='/tmp/keystore.jks'
+        keystorePassword='keystorePass'
+        keyPassword='keyPass'
+        truststorePath='/tmp/truststore.jks'
+        truststorePassword='truststorePass'
+        requireClientAuth=true
+    }
+}
 ```
 
 ### Build with docker
@@ -96,7 +111,15 @@ remoteMockServer.addMock(new AddMock(
                     statusCode: ...,
                     method: ...,
                     responseHeaders: ...,
-                    schema: ...
+                    schema: ...,
+                    https: new Https(
+                            keystorePath: '/tmp/keystore.jks',
+                            keystorePassword: 'keystorePass',
+                            keyPassword: 'keyPass',
+                            truststorePath: '/tmp/truststore.jks',
+                            truststorePassword: 'truststorePass',
+                            requireClientAuth: true
+                    )
             ))
 ```
 
@@ -117,6 +140,14 @@ Send POST request to localhost:<PORT>/serverControl
     <responseHeaders>...</responseHeaders>
     <schema>...</schema>
     <imports alias="..." fullClassName="..."/>
+    <https>
+        <keystorePath>/tmp/keystore.jks</keystorePath>
+        <keystorePassword>keystorePass</keystorePassword>
+        <keyPassword>keyPass</keyPassword>
+        <truststorePath>/tmp/truststore.jks</truststorePath>
+        <truststorePassword>truststorePass</truststorePassword>
+        <requireClientAuth>true</requireClientAuth>
+    </https>
 </addMock>
 ```
 
@@ -133,6 +164,18 @@ Send POST request to localhost:<PORT>/serverControl
 -	responseHeaders - groovyClosure as string which must evaluate to Map which will be added to response headers, default { _ -> \[:] }
 -	schema - path to xsd schema file on mockserver classpath; default empty, so no vallidation of request is performed; if validation fails then response has got status 400 and response is raw message from validator
 -	imports - list of imports for closures (each import is separate tag); `alias` is the name of `fullClassName` available in closure; `fullClassName` must be available on classpath of mock server
+-   https - HTTPS configuration
+
+#### HTTPS configuration
+
+-   keystorePath - path to keystore in JKS format, keystore should contains only one privateKeyEntry
+-   keystorePassword - keystore password
+-   keyPassword - key password
+-   truststorePath - path to truststore in JKS format
+-   truststorePassword - truststore password
+-   requireClientAuth - whether client auth is required (two-way SSL)
+
+**HTTP** and **HTTPS** should be started on separated ports.
 
 ### Closures request properties
 

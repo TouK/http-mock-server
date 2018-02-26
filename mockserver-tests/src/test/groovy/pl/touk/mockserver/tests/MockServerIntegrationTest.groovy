@@ -27,14 +27,15 @@ import pl.touk.mockserver.client.MockDoesNotExist
 import pl.touk.mockserver.client.RemoteMockServer
 import pl.touk.mockserver.client.Util
 import pl.touk.mockserver.server.HttpMockServer
+import spock.lang.AutoCleanup
 import spock.lang.Shared
 import spock.lang.Specification
-import spock.lang.Unroll
 
 class MockServerIntegrationTest extends Specification {
 
     RemoteMockServer remoteMockServer
 
+    @AutoCleanup('stop')
     HttpMockServer httpMockServer
 
     @Shared
@@ -43,10 +44,6 @@ class MockServerIntegrationTest extends Specification {
     def setup() {
         httpMockServer = new HttpMockServer(9000)
         remoteMockServer = new RemoteMockServer('localhost', 9000)
-    }
-
-    def cleanup() {
-        httpMockServer.stop()
     }
 
     def "should add working rest mock on endpoint"() {
@@ -244,7 +241,6 @@ class MockServerIntegrationTest extends Specification {
             soapPostResponse.Body.'goodResponseSoap-request'.size() == 1
     }
 
-    @Unroll
     def "should dispatch rest mocks when second on #name"() {
         given:
             remoteMockServer.addMock(new AddMock(
@@ -283,7 +279,6 @@ class MockServerIntegrationTest extends Specification {
             9998       | 'test2'    | 'another port and path'
     }
 
-    @Unroll
     def "should dispatch rest mock with response code"() {
         given:
             remoteMockServer.addMock(new AddMock(
@@ -857,7 +852,6 @@ class MockServerIntegrationTest extends Specification {
             mockEvents2[0].response.statusCode == 202
     }
 
-    @Unroll
     def "should return mock report with #mockEvents events when deleting mock with flag skip mock = #skipReport"() {
         expect:
             remoteMockServer.addMock(new AddMock(
@@ -885,7 +879,6 @@ class MockServerIntegrationTest extends Specification {
             true       | 0
     }
 
-    @Unroll
     def "should reject mock when it has System.exit in closure"() {
         when:
             remoteMockServer.addMock(new AddMock(
@@ -1133,7 +1126,6 @@ class MockServerIntegrationTest extends Specification {
             remoteMockServer.removeMock('testRest')?.size() == 1
     }
 
-    @Unroll
     def 'should handle leading slash'() {
         given:
             String name = "testRest-${UUID.randomUUID().toString()}"

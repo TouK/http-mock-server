@@ -20,6 +20,7 @@
                     <xs:element name="soap" type="xs:boolean" minOccurs="0"/>
                     <xs:element name="statusCode" type="xs:int" minOccurs="0"/>
                     <xs:element name="method" type="common:method" minOccurs="0"/>
+                    <xs:element name="https" type="common:https" minOccurs="0" />
                     <xs:element name="responseHeaders" type="xs:string" minOccurs="0"/>
                     <xs:element name="schema" type="xs:string" minOccurs="0"/>
                     <xs:element name="imports" type="common:importAlias" minOccurs="0" maxOccurs="unbounded"/>

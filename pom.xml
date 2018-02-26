@@ -36,6 +36,7 @@
         <jmh.version>1.11.2</jmh.version>
         <maven-release-plugin.version>2.5.2</maven-release-plugin.version>
         <gmavenplus-plugin.version>1.4</gmavenplus-plugin.version>
+        <spock-global-unroll.version>0.5.1</spock-global-unroll.version>
     </properties>
 
     <scm>
@@ -97,6 +98,12 @@
                 <groupId>org.openjdk.jmh</groupId>
                 <artifactId>jmh-generator-annprocess</artifactId>
                 <version>${jmh.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>info.solidsoft.spock</groupId>
+                <artifactId>spock-global-unroll</artifactId>
+                <version>${spock-global-unroll.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>

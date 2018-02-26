@@ -5,6 +5,7 @@ import groovy.transform.PackageScope
 import groovy.util.logging.Slf4j
 import org.codehaus.groovy.control.CompilerConfiguration
 import org.codehaus.groovy.control.customizers.ImportCustomizer
+import pl.touk.mockserver.api.common.Https
 import pl.touk.mockserver.api.common.Method
 
 import javax.xml.XMLConstants
@@ -35,6 +36,7 @@ class Mock implements Comparable<Mock> {
     private Validator validator
     Map<String, String> imports = [:]
     boolean preserveHistory = true
+    Https https
 
     Mock(String name, String path, int port) {
         if (!(name)) {

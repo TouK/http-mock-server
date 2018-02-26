@@ -18,5 +18,16 @@
         <xs:attribute name="alias" type="xs:string"/>
         <xs:attribute name="fullClassName" type="xs:string"/>
     </xs:complexType>
+
+    <xs:complexType name="https">
+        <xs:sequence>
+            <xs:element name="keystorePath"  type="xs:string" />
+            <xs:element name="keystorePassword" type="xs:string" />
+            <xs:element name="keyPassword" type="xs:string" />
+            <xs:element name="truststorePath" type="xs:string" />
+            <xs:element name="truststorePassword" type="xs:string" />
+            <xs:element name="requireClientAuth" type="xs:boolean" />
+        </xs:sequence>
+    </xs:complexType>
 </xs:schema>
 
