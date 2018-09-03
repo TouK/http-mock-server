@@ -158,7 +158,7 @@ class Mock implements Comparable<Mock> {
         if (schema) {
             try {
                 validator = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI)
-                        .newSchema(new File(this.class.getResource("/$schema").path))
+                        .newSchema(this.class.getResource("/$schema"))
                         .newValidator()
             } catch (Exception e) {
                 throw new RuntimeException('mock request schema is invalid schema', e)
