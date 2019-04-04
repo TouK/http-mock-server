@@ -49,6 +49,15 @@
                     <finalName>mockserver-full</finalName>
                     <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
+		<executions>
+                    <execution>
+		        <id>create-archive</id>
+		        <phase>package</phase>
+		        <goals>
+		            <goal>single</goal>
+		        </goals>
+		    </execution>
+		</executions>
             </plugin>
         </plugins>
     </build>
