@@ -39,6 +39,7 @@ class ContextExecutor {
             try {
                 if (mock.match(Method.valueOf(ex.requestMethod), request)) {
                     log.debug("Mock ${mock.name} match request ${request.text}")
+                    handleMaxUses(mock)
                     MockResponse httpResponse = mock.apply(request)
                     fillExchange(ex, httpResponse)
                     log.trace("Mock ${mock.name} response with body ${httpResponse.text}")
@@ -91,5 +92,23 @@ class ContextExecutor {
 
     List<Mock> getMocks() {
         return mocks
+    }
+
+    private synchronized void handleMaxUses(Mock mock) {
+        if (mock.hasLimitedUses()) {
+            mock.decrementUses()
+            removeAndResetIfNeeded(mock)
+            log.debug("Uses left ${mock.usesLeft} of ${mock.maxUses} (is cyclic: ${mock.cyclic})")
+        }
+    }
+
+    private void removeAndResetIfNeeded(Mock mock) {
+        if (mock.shouldBeRemoved()) {
+            mocks.remove(mock)
+        }
+        if (mock.shouldUsesBeReset()) {
+            mock.resetUses()
+            mocks.add(mock)
+        }
     }
 }

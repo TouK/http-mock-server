@@ -37,6 +37,9 @@ class Mock implements Comparable<Mock> {
     Map<String, String> imports = [:]
     boolean preserveHistory = true
     Https https
+    int maxUses = -1
+    int usesLeft
+    boolean cyclic
 
     Mock(String name, String path, int port) {
         if (!(name)) {
@@ -148,6 +151,17 @@ class Mock implements Comparable<Mock> {
         }
     }
 
+    void setMaxUses(Integer maxUses) {
+        if (maxUses > 0) {
+            this.maxUses = maxUses
+            this.usesLeft = maxUses
+        }
+    }
+
+    void setCyclic(Boolean cyclic) {
+        this.cyclic = cyclic ?: false
+    }
+
     @Override
     int compareTo(Mock o) {
         return name.compareTo(o.name)
@@ -164,5 +178,25 @@ class Mock implements Comparable<Mock> {
                 throw new RuntimeException('mock request schema is invalid schema', e)
             }
         }
+    }
+
+    boolean hasLimitedUses() {
+        return maxUses > 0
+    }
+
+    void decrementUses() {
+        usesLeft--
+    }
+
+    boolean shouldBeRemoved() {
+        return hasLimitedUses() && usesLeft <= 0
+    }
+
+    boolean shouldUsesBeReset() {
+        return shouldBeRemoved() && cyclic
+    }
+
+    void resetUses() {
+        setMaxUses(maxUses)
     }
 }
