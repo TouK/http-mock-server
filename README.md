@@ -30,39 +30,41 @@ Configuration file is groovy configuration script e.g. :
 
 ```groovy
 testRest2 {
-	port=9998
-	response='{ req -> \'<response/>\' }'
-	responseHeaders='{ _ -> [a: "b"] }'
-	path='testEndpoint'
-	predicate='{ req -> req.xml.name() == \'request1\'}'
-	name='testRest2'
+    port=9998
+    response='{ req -> \'<response/>\' }'
+    responseHeaders='{ _ -> [a: "b"] }'
+    path='testEndpoint'
+    predicate='{ req -> req.xml.name() == \'request1\'}'
+    name='testRest2'
 }
 testRest4 {
-	soap=true
-	port=9999
-	path='testEndpoint'
-	name='testRest4'
-	method='PUT'
-	statusCode=204
+    soap=true
+    port=9999
+    path='testEndpoint'
+    name='testRest4'
+    method='PUT'
+    statusCode=204
 }
 testRest3 {
-	port=9999
-	path='testEndpoint2'
-	name='testRest3'
+    port=9999
+    path='testEndpoint2'
+    name='testRest3'
 }
 testRest6 {
-	port=9999
-	path='testEndpoint2'
-	name='testRest6'
+    port=9999
+    path='testEndpoint2'
+    name='testRest6'
+    maxUses=1
+    cyclic=true
 }
 testRest {
-	imports {
-		aaa='bbb'
-		ccc='bla'
-	}
-	port=10001
-	path='testEndpoint'
-	name='testRest'
+    imports {
+        aaa='bbb'
+        ccc='bla'
+    }
+    port=10001
+    path='testEndpoint'
+    name='testRest'
 }
 testHttps {
     soap=false
@@ -112,6 +114,8 @@ remoteMockServer.addMock(new AddMock(
                     method: ...,
                     responseHeaders: ...,
                     schema: ...,
+                    maxUses: ...,
+                    cyclic: ...,
                     https: new Https(
                             keystorePath: '/tmp/keystore.jks',
                             keystorePassword: 'keystorePass',
@@ -140,6 +144,8 @@ Send POST request to localhost:<PORT>/serverControl
     <responseHeaders>...</responseHeaders>
     <schema>...</schema>
     <imports alias="..." fullClassName="..."/>
+    <maxUses>...</maxUses>
+    <cyclic>...</cyclic>
     <https>
         <keystorePath>/tmp/keystore.jks</keystorePath>
         <keystorePassword>keystorePass</keystorePassword>
@@ -165,6 +171,8 @@ Send POST request to localhost:<PORT>/serverControl
 -	schema - path to xsd schema file on mockserver classpath; default empty, so no vallidation of request is performed; if validation fails then response has got status 400 and response is raw message from validator
 -	imports - list of imports for closures (each import is separate tag); `alias` is the name of `fullClassName` available in closure; `fullClassName` must be available on classpath of mock server
 -   https - HTTPS configuration
+-   maxUses - limit uses of mock to the specific number, after that mock is removed (any negative number means unlimited - default, cannot set value to 0)
+-   cyclic - should mock be added after `maxUses` uses at the end of the mock list (by default false)
 
 #### HTTPS configuration
 
@@ -376,39 +384,39 @@ Response:
 
 ```groovy
 testRest2 {
-	port=9998
-	response='{ req -> \'<response/>\' }'
-	responseHeaders='{ _ -> [a: "b"] }'
-	path='testEndpoint'
-	predicate='{ req -> req.xml.name() == \'request1\'}'
-	name='testRest2'
+    port=9998
+    response='{ req -> \'<response/>\' }'
+    responseHeaders='{ _ -> [a: "b"] }'
+    path='testEndpoint'
+    predicate='{ req -> req.xml.name() == \'request1\'}'
+    name='testRest2'
 }
 testRest4 {
-	soap=true
-	port=9999
-	path='testEndpoint'
-	name='testRest4'
-	method='PUT'
-	statusCode=204
+    soap=true
+    port=9999
+    path='testEndpoint'
+    name='testRest4'
+    method='PUT'
+    statusCode=204
 }
 testRest3 {
-	port=9999
-	path='testEndpoint2'
-	name='testRest3'
+    port=9999
+    path='testEndpoint2'
+    name='testRest3'
 }
 testRest6 {
-	port=9999
-	path='testEndpoint2'
-	name='testRest6'
+    port=9999
+    path='testEndpoint2'
+    name='testRest6'
 }
 testRest {
-	imports {
-		aaa='bbb'
-		ccc='bla'
-	}
-	port=10001
-	path='testEndpoint'
-	name='testRest'
+    imports {
+        aaa='bbb'
+        ccc='bla'
+    }
+    port=10001
+    path='testEndpoint'
+    name='testRest'
 }
 ```
 
@@ -435,3 +443,9 @@ Just add repository to maven pom:
     ...
 </project>
 ```
+
+FAQ
+---
+
+Q: *Can I have two mocks returning responses interchangeably for the same request?*
+A: Yes, you can. Just set two mocks with `maxUses: 1` and `cyclic: true`.

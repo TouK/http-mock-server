@@ -108,6 +108,9 @@ class HttpMockServer {
         if (name in mockNames) {
             throw new RuntimeException('mock already registered')
         }
+        if (request.maxUses == 0) {
+            throw new RuntimeException('cannot set maxUses to 0')
+        }
         Mock mock = mockFromRequest(request)
         HttpServerWrapper child = getOrCreateChildServer(mock.port, mock.https)
         child.addMock(mock)
@@ -120,6 +123,9 @@ class HttpMockServer {
         String name = co.name
         if (name in mockNames) {
             throw new RuntimeException('mock already registered')
+        }
+        if (co.maxUses == 0) {
+            throw new RuntimeException('cannot set maxUses to 0')
         }
         Mock mock = mockFromConfig(co)
         HttpServerWrapper child = getOrCreateChildServer(mock.port, mock.https)
@@ -158,6 +164,8 @@ class HttpMockServer {
         mock.schema = request.schema
         mock.preserveHistory = request.preserveHistory != false
         mock.https = request.https
+        mock.maxUses = request.maxUses
+        mock.cyclic = request.cyclic
         return mock
     }
 
@@ -182,6 +190,8 @@ class HttpMockServer {
                 requireClientAuth: co.https?.requireClientAuth?.asBoolean() ?: false
             )
         }
+        mock.maxUses = co.maxUses ?: null
+        mock.cyclic = co.cyclic ?: null
         return mock
     }
 
