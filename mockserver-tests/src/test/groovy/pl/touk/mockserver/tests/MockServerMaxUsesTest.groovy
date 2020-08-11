@@ -96,6 +96,8 @@ class MockServerMaxUsesTest extends Specification {
             CloseableHttpResponse response3 = client.execute(restPost)
         then:'no mock should be found'
             response3.statusLine.statusCode == 404
+        and:'mock should exist'
+            remoteMockServer.listMocks().find { it.name == 'mock1' } != null
     }
 
     def 'should return two mocks in cyclic order'() {
