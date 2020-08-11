@@ -59,7 +59,8 @@ class Mock implements Comparable<Mock> {
     }
 
     boolean match(Method method, MockRequest request) {
-        return this.method == method && predicate(request)
+        boolean usesCondition = hasLimitedUses() ? usesLeft > 0 : true
+        return usesCondition && this.method == method && predicate(request)
     }
 
     MockResponse apply(MockRequest request) {
@@ -188,12 +189,8 @@ class Mock implements Comparable<Mock> {
         usesLeft--
     }
 
-    boolean shouldBeRemoved() {
-        return hasLimitedUses() && usesLeft <= 0
-    }
-
     boolean shouldUsesBeReset() {
-        return shouldBeRemoved() && cyclic
+        return hasLimitedUses() && usesLeft <= 0 && cyclic
     }
 
     void resetUses() {

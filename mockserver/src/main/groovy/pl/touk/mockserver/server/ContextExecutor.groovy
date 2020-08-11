@@ -97,17 +97,15 @@ class ContextExecutor {
     private synchronized void handleMaxUses(Mock mock) {
         if (mock.hasLimitedUses()) {
             mock.decrementUses()
-            removeAndResetIfNeeded(mock)
+            resetIfNeeded(mock)
             log.debug("Uses left ${mock.usesLeft} of ${mock.maxUses} (is cyclic: ${mock.cyclic})")
         }
     }
 
-    private void removeAndResetIfNeeded(Mock mock) {
-        if (mock.shouldBeRemoved()) {
-            mocks.remove(mock)
-        }
+    private void resetIfNeeded(Mock mock) {
         if (mock.shouldUsesBeReset()) {
             mock.resetUses()
+            mocks.remove(mock)
             mocks.add(mock)
         }
     }

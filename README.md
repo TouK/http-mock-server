@@ -171,7 +171,7 @@ Send POST request to localhost:<PORT>/serverControl
 -	schema - path to xsd schema file on mockserver classpath; default empty, so no vallidation of request is performed; if validation fails then response has got status 400 and response is raw message from validator
 -	imports - list of imports for closures (each import is separate tag); `alias` is the name of `fullClassName` available in closure; `fullClassName` must be available on classpath of mock server
 -   https - HTTPS configuration
--   maxUses - limit uses of mock to the specific number, after that mock is removed (any negative number means unlimited - default, cannot set value to 0)
+-   maxUses - limit uses of mock to the specific number, after that mock is marked as ignored (any negative number means unlimited - default, cannot set value to 0), after this number of invocation mock history is still available, but mock does not apply to any request 
 -   cyclic - should mock be added after `maxUses` uses at the end of the mock list (by default false)
 
 #### HTTPS configuration
