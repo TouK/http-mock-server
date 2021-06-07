@@ -28,8 +28,8 @@
         <httpclient.version>4.3.6</httpclient.version>
         <spock-core.version>1.3-groovy-2.5</spock-core.version>
         <commons-lang3.version>3.3.2</commons-lang3.version>
-        <slf4j-api.version>1.7.7</slf4j-api.version>
-        <logback-classic.version>1.0.13</logback-classic.version>
+        <slf4j-api.version>1.7.30</slf4j-api.version>
+        <logback.version>1.2.3</logback.version>
         <lombok.version>1.16.6</lombok.version>
 
         <autoVersionSubmodules>true</autoVersionSubmodules>
@@ -85,8 +85,13 @@
             </dependency>
             <dependency>
                 <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-core</artifactId>
+                <version>${logback.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
-                <version>${logback-classic.version}</version>
+                <version>${logback.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.projectlombok</groupId>
