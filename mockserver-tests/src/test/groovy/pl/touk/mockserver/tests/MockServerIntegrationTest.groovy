@@ -28,7 +28,6 @@ import pl.touk.mockserver.client.RemoteMockServer
 import pl.touk.mockserver.client.Util
 import pl.touk.mockserver.server.HttpMockServer
 import spock.lang.AutoCleanup
-import spock.lang.Shared
 import spock.lang.Specification
 
 class MockServerIntegrationTest extends Specification {
@@ -38,7 +37,6 @@ class MockServerIntegrationTest extends Specification {
     @AutoCleanup('stop')
     HttpMockServer httpMockServer
 
-    @Shared
     CloseableHttpClient client = HttpClients.createDefault()
 
     def setup() {

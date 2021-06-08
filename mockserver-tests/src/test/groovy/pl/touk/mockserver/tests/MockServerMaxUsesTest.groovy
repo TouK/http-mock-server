@@ -21,7 +21,6 @@ class MockServerMaxUsesTest extends Specification {
     @AutoCleanup('stop')
     HttpMockServer httpMockServer
 
-    @Shared
     CloseableHttpClient client = HttpClients.createDefault()
 
     def setup() {
