@@ -166,7 +166,7 @@ Send POST request to localhost:<PORT>/serverControl
 -	response - groovy closure as string which must evaluate to string which will be response of mock when predicate is satisfied, optional, default { _ -> '' }
 -	soap - true or false, is request and response should be wrapped in soap Envelope and Body elements, default false
 -	statusCode - integer, status code of response when predicate is satisfied, default 200
--	method - POST|PUT|DELETE|GET|TRACE|OPTION|HEAD, expected http method of request, default POST
+-	method - POST|PUT|DELETE|GET|TRACE|OPTION|HEAD|ANY_METHOD, expected http method of request, default `POST`, `ANY_METHOD` matches all HTTP methods
 -	responseHeaders - groovyClosure as string which must evaluate to Map which will be added to response headers, default { _ -> \[:] }
 -	schema - path to xsd schema file on mockserver classpath; default empty, so no vallidation of request is performed; if validation fails then response has got status 400 and response is raw message from validator
 -	imports - list of imports for closures (each import is separate tag); `alias` is the name of `fullClassName` available in closure; `fullClassName` must be available on classpath of mock server
