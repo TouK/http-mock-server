@@ -60,7 +60,7 @@ class Mock implements Comparable<Mock> {
 
     boolean match(Method method, MockRequest request) {
         boolean usesCondition = hasLimitedUses() ? usesLeft > 0 : true
-        return usesCondition && this.method == method && predicate(request)
+        return usesCondition && (this.method == method || this.method == Method.ANY_METHOD) && predicate(request)
     }
 
     MockResponse apply(MockRequest request) {

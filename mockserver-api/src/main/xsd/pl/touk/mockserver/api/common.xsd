@@ -11,6 +11,7 @@
             <xs:enumeration value="HEAD"/>
             <xs:enumeration value="OPTIONS"/>
             <xs:enumeration value="PATCH"/>
+            <xs:enumeration value="ANY_METHOD" />
         </xs:restriction>
     </xs:simpleType>
 

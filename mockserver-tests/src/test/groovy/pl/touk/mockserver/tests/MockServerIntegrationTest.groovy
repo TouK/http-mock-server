@@ -1152,4 +1152,30 @@ class MockServerIntegrationTest extends Specification {
             'test/other'   | 'test/other'
             '/test/other'  | 'test/other'
     }
+
+    def 'should match any method'() {
+        given:
+            String name = "testRest-${UUID.randomUUID().toString()}"
+            remoteMockServer.addMock(new AddMock(
+                    name: name,
+                    path: 'any-method',
+                    port: 9999,
+                    statusCode: 201,
+                    soap: false,
+                    method: Method.ANY_METHOD
+            ))
+        when:
+            CloseableHttpResponse response = client.execute(req)
+        then:
+            response.statusLine.statusCode == 201
+            Util.consumeResponse(response)
+        cleanup:
+            remoteMockServer.removeMock(name)
+        where:
+            req << [
+                    new HttpGet('http://localhost:9999/any-method'),
+                    new HttpPost('http://localhost:9999/any-method'),
+                    new HttpPatch('http://localhost:9999/any-method')
+            ]
+    }
 }
