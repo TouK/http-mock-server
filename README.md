@@ -1,4 +1,4 @@
-[![Build Status](https://img.shields.io/travis/TouK/http-mock-server/master.svg?style=flat)](https://travis-ci.org/TouK/http-mock-server)
+[![Build mockserver](https://github.com/TouK/http-mock-server/actions/workflows/build.yml/badge.svg)](https://github.com/TouK/http-mock-server/actions/workflows/build.yml)
 
 HTTP MOCK SERVER
 ================
