@@ -30,7 +30,7 @@
         <commons-lang3.version>3.18.0</commons-lang3.version>
         <slf4j-api.version>1.7.30</slf4j-api.version>
         <logback.version>1.5.19</logback.version>
-        <lombok.version>1.16.6</lombok.version>
+        <lombok.version>1.18.42</lombok.version>
 
         <autoVersionSubmodules>true</autoVersionSubmodules>
         <jmh.version>1.11.2</jmh.version>
