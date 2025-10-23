@@ -159,13 +159,6 @@
         </plugins>
     </build>
 
-    <contributors>
-        <contributor>
-            <name>Dominik Przybysz</name>
-            <email>alien11689@gmail.com</email>
-        </contributor>
-    </contributors>
-
     <repositories>
         <repository>
             <id>touk</id>
