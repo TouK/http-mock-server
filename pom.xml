@@ -24,9 +24,9 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
-        <groovy.version>3.0.25</groovy.version>
+        <groovy.version>4.0.29</groovy.version>
         <httpclient.version>4.5.14</httpclient.version>
-        <spock-core.version>2.3-groovy-3.0</spock-core.version>
+        <spock-core.version>2.3-groovy-4.0</spock-core.version>
         <commons-lang3.version>3.19.0</commons-lang3.version>
         <slf4j-api.version>1.7.30</slf4j-api.version>
         <logback.version>1.5.20</logback.version>
@@ -47,17 +47,17 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>org.codehaus.groovy</groupId>
+                <groupId>org.apache.groovy</groupId>
                 <artifactId>groovy</artifactId>
                 <version>${groovy.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.codehaus.groovy</groupId>
+                <groupId>org.apache.groovy</groupId>
                 <artifactId>groovy-json</artifactId>
                 <version>${groovy.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.codehaus.groovy</groupId>
+                <groupId>org.apache.groovy</groupId>
                 <artifactId>groovy-xml</artifactId>
                 <version>${groovy.version}</version>
             </dependency>
