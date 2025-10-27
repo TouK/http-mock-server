@@ -44,10 +44,6 @@
             <artifactId>mockserver-client</artifactId>
             <version>${project.version}</version>
         </dependency>
-        <dependency>
-            <groupId>info.solidsoft.spock</groupId>
-            <artifactId>spock-global-unroll</artifactId>
-        </dependency>
     </dependencies>
 
 </project>
