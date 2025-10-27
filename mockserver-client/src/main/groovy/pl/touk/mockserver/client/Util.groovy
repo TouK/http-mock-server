@@ -3,7 +3,8 @@ package pl.touk.mockserver.client
 import groovy.json.JsonSlurper
 import groovy.transform.CompileStatic
 import groovy.transform.TypeChecked
-import groovy.util.slurpersupport.GPathResult
+import groovy.xml.slurpersupport.GPathResult
+import groovy.xml.XmlSlurper
 import org.apache.http.HttpEntity
 import org.apache.http.client.methods.CloseableHttpResponse
 import org.apache.http.util.EntityUtils

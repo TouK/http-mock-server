@@ -3,8 +3,9 @@ package pl.touk.mockserver.server
 import com.sun.net.httpserver.Headers
 import groovy.json.JsonSlurper
 import groovy.transform.PackageScope
-import groovy.util.slurpersupport.GPathResult
+import groovy.xml.slurpersupport.GPathResult
 import groovy.xml.XmlUtil
+import groovy.xml.XmlSlurper
 
 @PackageScope
 class MockRequest {

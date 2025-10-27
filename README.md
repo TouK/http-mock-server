@@ -192,8 +192,8 @@ In closures input parameter (called req) contains properties:
 -	text - request body as java.util.String
 -	headers - java.util.Map with request headers
 -	query - java.util.Map with query parameters
--	xml - groovy.util.slurpersupport.GPathResult created from request body (if request body is valid xml)
--	soap - groovy.util.slurpersupport.GPathResult created from request body without Envelope and Body elements (if request body is valid soap xml)
+-	xml - groovy.xml.slurpersupport.GPathResult created from request body (if request body is valid xml)
+-	soap - groovy.xml.slurpersupport.GPathResult created from request body without Envelope and Body elements (if request body is valid soap xml)
 -	json - java.lang.Object created from request body (if request body is valid json)
 -	path - java.util.List<String> with not empty parts of request path
 
