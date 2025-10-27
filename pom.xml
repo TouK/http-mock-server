@@ -35,7 +35,7 @@
         <autoVersionSubmodules>true</autoVersionSubmodules>
         <jmh.version>1.37</jmh.version>
         <maven-release-plugin.version>2.5.2</maven-release-plugin.version>
-        <gmavenplus-plugin.version>1.4</gmavenplus-plugin.version>
+        <gmavenplus-plugin.version>4.2.1</gmavenplus-plugin.version>
         <spock-global-unroll.version>0.5.1</spock-global-unroll.version>
     </properties>
 
