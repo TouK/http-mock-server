@@ -23,7 +23,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
+        <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
         <groovy.version>4.0.29</groovy.version>
         <httpclient.version>4.5.14</httpclient.version>
         <spock-core.version>2.3-groovy-4.0</spock-core.version>
