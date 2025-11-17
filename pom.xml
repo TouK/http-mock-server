@@ -29,7 +29,7 @@
         <spock-core.version>2.3-groovy-4.0</spock-core.version>
         <commons-lang3.version>3.19.0</commons-lang3.version>
         <slf4j-api.version>1.7.30</slf4j-api.version>
-        <logback.version>1.5.20</logback.version>
+        <logback.version>1.5.21</logback.version>
         <lombok.version>1.18.42</lombok.version>
 
         <autoVersionSubmodules>true</autoVersionSubmodules>
